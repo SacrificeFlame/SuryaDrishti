@@ -13,8 +13,9 @@ restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
 # Environment variables should be set in Railway dashboard:
-# - DATABASE_URL (Railway PostgreSQL)
-# - REDIS_URL (Railway Redis)
-# - SECRET_KEY
+# - DATABASE_URL=${{Postgres.DATABASE_URL}} (Railway PostgreSQL - auto-set)
+# - REDIS_URL=${{Redis.REDIS_URL}} (Railway Redis - auto-set)
+# - SECRET_KEY=<generate-random-string>
 # - DEBUG=False
+# - ALLOWED_ORIGINS=https://your-app-name.up.railway.app
 
