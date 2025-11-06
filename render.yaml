@@ -1,5 +1,6 @@
 # Render Configuration
-# This file configures Render deployment
+# Note: PostgreSQL must be created manually in Render dashboard
+# This file configures the web service and Redis
 
 services:
   - type: web
@@ -10,9 +11,7 @@ services:
     plan: starter
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: suryादrishti-db
-          property: connectionString
+        sync: false  # Set this manually in Render dashboard after creating PostgreSQL
       - key: REDIS_URL
         fromService:
           name: suryादrishti-redis
@@ -31,12 +30,6 @@ services:
     plan: starter
     maxmemoryPolicy: allkeys-lru
 
-  - type: pg
-    name: suryादrishti-db
-    plan: starter
-    databaseName: suryादrishti
-    user: suryादrishti
-
   - type: worker
     name: suryादrishti-celery
     env: docker
@@ -46,9 +39,7 @@ services:
     command: celery -A app.core.celery_app worker --loglevel=info
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: suryादrishti-db
-          property: connectionString
+        sync: false  # Set this manually in Render dashboard
       - key: REDIS_URL
         fromService:
           name: suryादrishti-redis
