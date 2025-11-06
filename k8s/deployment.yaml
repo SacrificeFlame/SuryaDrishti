@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: suryादrishti-backend
+  labels:
+    app: suryादrishti-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: suryादrishti-backend
+  template:
+    metadata:
+      labels:
+        app: suryादrishti-backend
+    spec:
+      containers:
+      - name: backend
+        image: suryादrishti-backend:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: suryादrishti-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: suryादrishti-secrets
+              key: redis-url
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: suryादrishti-secrets
+              key: secret-key
+        - name: DEBUG
+          value: "False"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: suryादrishti-backend-service
+spec:
+  selector:
+    app: suryादrishti-backend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: suryादrishti-celery-worker
+  labels:
+    app: suryादrishti-celery-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: suryादrishti-celery-worker
+  template:
+    metadata:
+      labels:
+        app: suryादrishti-celery-worker
+    spec:
+      containers:
+      - name: celery-worker
+        image: suryादrishti-backend:latest
+        command: ["celery", "-A", "app.core.celery_app", "worker", "--loglevel=info"]
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: suryादrishti-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: suryादrishti-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+

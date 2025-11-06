@@ -1,0 +1,36 @@
+# Azure Container Instances Configuration
+apiVersion: 2019-12-01
+location: eastus
+name: suryादrishti
+properties:
+  containers:
+  - name: suryादrishti-backend
+    properties:
+      image: yourregistry.azurecr.io/suryादrishti:latest
+      resources:
+        requests:
+          cpu: 2
+          memoryInGb: 2
+      ports:
+      - port: 8000
+        protocol: TCP
+      environmentVariables:
+      - name: DATABASE_URL
+        secureValue: your-database-url
+      - name: REDIS_URL
+        secureValue: your-redis-url
+      - name: SECRET_KEY
+        secureValue: your-secret-key
+      - name: DEBUG
+        value: "False"
+  osType: Linux
+  restartPolicy: Always
+  ipAddress:
+    type: Public
+    ports:
+    - protocol: tcp
+      port: 8000
+    dnsNameLabel: suryादrishti
+tags:
+  environment: production
+

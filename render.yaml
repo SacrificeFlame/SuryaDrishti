@@ -1,0 +1,57 @@
+# Render Configuration
+# This file configures Render deployment
+
+services:
+  - type: web
+    name: suryादrishti-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: PORT
+        value: 8000
+    healthCheckPath: /health
+
+  - type: redis
+    name: suryादrishti-redis
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+
+  - type: pspg
+    name: suryादrishti-db
+    plan: starter
+    databaseName: suryादrishti
+    user: suryादrishti
+
+  - type: worker
+    name: suryादrishti-celery
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    command: celery -A app.core.celery_app worker --loglevel=info
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: suryादrishti-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: suryादrishti-redis
+          type: redis
+          property: connectionString
+      - key: SECRET_KEY
+        fromService:
+          name: suryादrishti-backend
+          type: web
+          property: env.SECRET_KEY
+

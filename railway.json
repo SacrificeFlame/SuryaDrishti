@@ -1,0 +1,20 @@
+# Railway Configuration
+# This file tells Railway how to build and run your app
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "backend/Dockerfile"
+
+[deploy]
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+# Environment variables should be set in Railway dashboard:
+# - DATABASE_URL (Railway PostgreSQL)
+# - REDIS_URL (Railway Redis)
+# - SECRET_KEY
+# - DEBUG=False
+
