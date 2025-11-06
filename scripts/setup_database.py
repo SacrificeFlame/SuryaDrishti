@@ -19,7 +19,7 @@ def setup_database():
     
     # Create all tables
     Base.metadata.create_all(bind=engine)
-    print("✅ Database tables created")
+    print("[OK] Database tables created")
     
     # Create session
     db = SessionLocal()
@@ -77,8 +77,8 @@ def setup_database():
             db.add(reading)
         
         db.commit()
-        print(f"✅ Seeded {len(microgrids)} microgrids")
-        print(f"✅ Seeded {len(microgrids)} sensor readings")
+        print(f"[OK] Seeded {len(microgrids)} microgrids")
+        print(f"[OK] Seeded {len(microgrids)} sensor readings")
         
         # Display created microgrids
         print("\nCreated Microgrids:")
@@ -88,13 +88,13 @@ def setup_database():
             print(f"    Capacity: {mg.capacity_kw} kW")
         
     except Exception as e:
-        print(f"❌ Error setting up database: {e}")
+        print(f"[ERROR] Error setting up database: {e}")
         db.rollback()
         raise
     finally:
         db.close()
     
-    print("\n✅ Database setup complete!")
+    print("\n[OK] Database setup complete!")
 
 if __name__ == "__main__":
     setup_database()

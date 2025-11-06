@@ -34,12 +34,12 @@ export default function ActionsLog({ actions }: ActionsLogProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-xl font-bold mb-4">Recent Actions</h2>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors duration-300">
+      <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Recent Actions</h2>
       
       <div className="relative">
         {/* Timeline line */}
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
         
         {/* Actions */}
         <div className="space-y-6">
@@ -53,12 +53,12 @@ export default function ActionsLog({ actions }: ActionsLogProps) {
               ></div>
               
               {/* Content */}
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <div className="font-medium text-gray-900">{action.action}</div>
-                  <div className="text-xs text-gray-500">{formatTime(action.timestamp)}</div>
+                  <div className="font-medium text-gray-900 dark:text-white">{action.action}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">{formatTime(action.timestamp)}</div>
                 </div>
-                <div className="text-sm text-gray-600 mb-2">{action.reason}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">{action.reason}</div>
                 <div className="flex items-center gap-2">
                   <span
                     className={`inline-block px-2 py-0.5 rounded text-xs font-semibold text-white ${getStatusColor(
@@ -75,7 +75,7 @@ export default function ActionsLog({ actions }: ActionsLogProps) {
       </div>
       
       {actions.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <div className="text-4xl mb-2">📋</div>
           <div>No recent actions</div>
         </div>

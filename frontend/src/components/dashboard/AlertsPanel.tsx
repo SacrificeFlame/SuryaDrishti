@@ -50,9 +50,9 @@ export default function AlertsPanel({ alerts }: AlertsPanelProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors duration-300">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Active Alerts</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Active Alerts</h2>
         <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
           {alerts.length}
         </span>
@@ -60,7 +60,7 @@ export default function AlertsPanel({ alerts }: AlertsPanelProps) {
 
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {alerts.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <div className="text-4xl mb-2">✓</div>
             <div>No active alerts</div>
             <div className="text-sm">System operating normally</div>

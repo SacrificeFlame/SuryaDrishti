@@ -20,36 +20,36 @@ export default function IrradianceForecast({
   const maxPower = Math.max(...forecasts.map(f => f.power_output), currentPower);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors duration-300">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold">Solar Irradiance Forecast</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Solar Irradiance Forecast</h2>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Confidence:</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">Confidence:</span>
           <span className="text-lg font-bold text-green-600">{(confidence * 100).toFixed(0)}%</span>
         </div>
       </div>
 
       {/* Current Status Cards */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="text-sm text-gray-600 mb-1">Current Irradiance</div>
+        <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Current Irradiance</div>
           <div className="text-2xl font-bold text-blue-600">{currentIrradiance.toFixed(0)}</div>
           <div className="text-xs text-gray-500">W/m²</div>
         </div>
-        <div className="bg-green-50 rounded-lg p-4">
-          <div className="text-sm text-gray-600 mb-1">Power Output</div>
+        <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Power Output</div>
           <div className="text-2xl font-bold text-green-600">{currentPower.toFixed(1)}</div>
           <div className="text-xs text-gray-500">kW</div>
         </div>
-        <div className="bg-purple-50 rounded-lg p-4">
-          <div className="text-sm text-gray-600 mb-1">Capacity Factor</div>
+        <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Capacity Factor</div>
           <div className="text-2xl font-bold text-purple-600">{((currentPower / 50) * 100).toFixed(0)}%</div>
           <div className="text-xs text-gray-500">of 50 kW</div>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="relative h-64 border border-gray-200 rounded-lg p-4">
+      <div className="relative h-64 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
         <svg width="100%" height="100%" viewBox="0 0 600 200">
           {/* Grid lines */}
           {[0, 1, 2, 3, 4].map(i => (
@@ -59,7 +59,8 @@ export default function IrradianceForecast({
               y1={i * 50}
               x2="600"
               y2={i * 50}
-              stroke="#e5e7eb"
+              stroke="currentColor"
+              className="text-gray-300 dark:text-gray-700"
               strokeWidth="1"
             />
           ))}
@@ -180,7 +181,7 @@ export default function IrradianceForecast({
       {/* Forecast Table */}
       <div className="mt-6 overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th className="px-4 py-2 text-left">Time</th>
               <th className="px-4 py-2 text-right">P10</th>
@@ -191,7 +192,7 @@ export default function IrradianceForecast({
           </thead>
           <tbody>
             {forecasts.map((f, i) => (
-              <tr key={i} className="border-t border-gray-100">
+              <tr key={i} className="border-t border-gray-100 dark:border-gray-700">
                 <td className="px-4 py-2 font-medium">{f.time}</td>
                 <td className="px-4 py-2 text-right">{f.p10.toFixed(0)}</td>
                 <td className="px-4 py-2 text-right font-bold">{f.p50.toFixed(0)}</td>

@@ -113,25 +113,25 @@ export default function CloudMovementMap({ cloudData, location }: CloudMovementM
   }, [cloudData]);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-xl font-bold mb-4">Cloud Movement Analysis</h2>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors duration-300">
+      <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Cloud Movement Analysis</h2>
       
       <div className="relative">
         <canvas
           ref={canvasRef}
           width={600}
           height={400}
-          className="w-full h-auto border border-gray-200 rounded"
+          className="w-full h-auto border border-gray-200 dark:border-gray-700 rounded"
         />
         
-        <div className="absolute top-2 right-2 bg-white bg-opacity-90 rounded p-2 text-xs">
-          <div className="font-semibold mb-1">Location</div>
-          <div>{location.lat.toFixed(4)}°N</div>
-          <div>{location.lon.toFixed(4)}°E</div>
+        <div className="absolute top-2 right-2 bg-white dark:bg-gray-800 bg-opacity-90 dark:bg-opacity-90 rounded p-2 text-xs border border-gray-200 dark:border-gray-700">
+          <div className="font-semibold mb-1 text-gray-900 dark:text-white">Location</div>
+          <div className="text-gray-700 dark:text-gray-300">{location.lat.toFixed(4)}°N</div>
+          <div className="text-gray-700 dark:text-gray-300">{location.lon.toFixed(4)}°E</div>
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-4 text-sm">
+      <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-700 dark:text-gray-300">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-blue-200 border border-gray-300"></div>
           <span>Clear Sky</span>

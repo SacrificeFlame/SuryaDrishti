@@ -48,18 +48,18 @@ export default function PerformanceMetrics({ metrics }: PerformanceMetricsProps)
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {metricCards.map((metric, index) => (
-        <div key={index} className="bg-white rounded-lg shadow-lg p-6">
+        <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors duration-300">
           <div className="flex items-start justify-between mb-2">
             <span className="text-3xl">{metric.icon}</span>
-            <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded">
+            <span className="text-xs font-semibold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900 px-2 py-1 rounded">
               {metric.trend}
             </span>
           </div>
-          <div className="text-sm text-gray-600 mb-1">{metric.label}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{metric.label}</div>
           <div className={`text-3xl font-bold mb-1 ${metric.color.split(' ')[1]}`}>
             {metric.value}
           </div>
-          <div className="text-xs text-gray-500">{metric.subtext}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-500">{metric.subtext}</div>
         </div>
       ))}
     </div>
