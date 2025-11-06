@@ -28,7 +28,7 @@ services:
   - type: redis
     name: suryादrishti-redis
     plan: starter
-    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []  # Empty array allows all IPs (for internal access)
 
   - type: worker
     name: suryादrishti-celery
@@ -36,8 +36,9 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     plan: starter
-    startCommand: celery -A app.core.celery_app worker --loglevel=info
     envVars:
+      - key: CELERY_WORKER
+        value: "true"
       - key: DATABASE_URL
         sync: false  # Set this manually in Render dashboard
       - key: REDIS_URL
@@ -46,8 +47,5 @@ services:
           type: redis
           property: connectionString
       - key: SECRET_KEY
-        fromService:
-          name: suryादrishti-backend
-          type: web
-          property: env.SECRET_KEY
+        sync: false  # Set this manually to match backend service SECRET_KEY
 
