@@ -10,15 +10,20 @@ services:
     plan: starter
     envVars:
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: suryादrishti-db
+          property: connectionString
       - key: REDIS_URL
-        sync: false
+        fromService:
+          name: suryादrishti-redis
+          type: redis
+          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
-        value: False
+        value: "False"
       - key: PORT
-        value: 8000
+        value: "8000"
     healthCheckPath: /health
 
   - type: redis
@@ -26,7 +31,7 @@ services:
     plan: starter
     maxmemoryPolicy: allkeys-lru
 
-  - type: pspg
+  - type: pg
     name: suryादrishti-db
     plan: starter
     databaseName: suryादrishti
