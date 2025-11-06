@@ -2,30 +2,19 @@ version: '3.8'
 
 services:
   backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=${DATABASE_URL:-sqlite:///./suryादrishti.db}
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
-      - USE_MOCK_DATA=${USE_MOCK_DATA:-true}
-      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
-      - DEBUG=${DEBUG:-true}
+      - DATABASE_URL=sqlite:///./suryादrishti.db
+      - REDIS_URL=redis://redis:6379/0
+      - USE_MOCK_DATA=true
     volumes:
       - ./backend:/app
       - ./data:/app/data
     depends_on:
       - redis
-      - db
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   redis:
     image: redis:7-alpine
@@ -34,64 +23,20 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_USER=suryादrishti
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-suryादrishti123}
-      - POSTGRES_DB=suryादrishti
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U suryादrishti"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   celery_worker:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
     command: celery -A app.core.celery_app worker --loglevel=info
     environment:
-      - DATABASE_URL=${DATABASE_URL:-postgresql://suryादrishti:suryादrishti123@db:5432/suryादrishti}
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
-      - USE_MOCK_DATA=${USE_MOCK_DATA:-true}
+      - DATABASE_URL=sqlite:///./suryादrishti.db
+      - REDIS_URL=redis://redis:6379/0
     volumes:
       - ./backend:/app
       - ./data:/app/data
     depends_on:
       - redis
-      - db
       - backend
-    restart: unless-stopped
-
-  celery_beat:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
-    command: celery -A app.core.celery_app beat --loglevel=info
-    environment:
-      - DATABASE_URL=${DATABASE_URL:-postgresql://suryादrishti:suryादrishti123@db:5432/suryादrishti}
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
-    volumes:
-      - ./backend:/app
-      - ./data:/app/data
-    depends_on:
-      - redis
-      - db
-    restart: unless-stopped
 
 volumes:
   redis_data:
-  postgres_data:
+

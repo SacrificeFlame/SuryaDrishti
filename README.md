@@ -216,23 +216,14 @@ flake8 app/
 
 ## Deployment
 
-### Quick Deploy
+### Docker (Coming Soon)
 
-**Option 1: Docker Compose (Local/Production)**
 ```bash
 docker-compose up -d
 ```
 
-**Option 2: Cloud Platforms**
-- **Railway**: See [CLOUD_DEPLOY.md](CLOUD_DEPLOY.md) for one-click deploy
-- **Render**: Connect GitHub repo, uses `render.yaml` automatically
-- **AWS/GCP/Azure**: See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed guides
-
 ### Production Checklist
 
-- [x] Docker configuration ready
-- [x] Cloud deployment configs (AWS, GCP, Azure, Railway, Render)
-- [x] CI/CD pipeline (GitHub Actions)
 - [ ] Set strong `SECRET_KEY` in environment
 - [ ] Configure production database (PostgreSQL/TimescaleDB)
 - [ ] Set up Redis for Celery
@@ -241,12 +232,6 @@ docker-compose up -d
 - [ ] Set up monitoring (Prometheus + Grafana)
 - [ ] Configure SSL/TLS
 - [ ] Set up automated backups
-
-### Deployment Guides
-
-- **[CLOUD_DEPLOY.md](CLOUD_DEPLOY.md)** - Quick start for cloud platforms
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Detailed deployment documentation
-- **[.github/workflows/ci-cd.yml](.github/workflows/ci-cd.yml)** - CI/CD pipeline
 
 ## Roadmap
 
