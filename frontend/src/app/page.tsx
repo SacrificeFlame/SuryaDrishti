@@ -26,8 +26,8 @@ export default function LandingPage() {
               <Link href="#pricing" className="text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
                 Pricing
               </Link>
-              <Link href="/dashboard" className="text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
-                Dashboard
+              <Link href="/login" className="text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
+                Login
               </Link>
               <ThemeToggle />
               <Link
@@ -65,7 +65,7 @@ export default function LandingPage() {
               Start Free Trial
             </Link>
             <Link
-              href="/dashboard"
+              href="/login"
               className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-8 py-4 rounded-full text-lg font-semibold border-2 border-gray-300 dark:border-gray-700 hover:border-yellow-500 dark:hover:border-yellow-500 transition-all duration-200"
             >
               View Demo
@@ -303,7 +303,7 @@ export default function LandingPage() {
               <h4 className="text-white font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
+                <li><Link href="/login" className="hover:text-white transition-colors">Login</Link></li>
                 <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
               </ul>
             </div>

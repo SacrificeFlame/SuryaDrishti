@@ -1,14 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from '@/components/ThemeToggle';
 
 export default function PurchasePage() {
   const { theme } = useTheme();
+  const { startTrial, isAuthenticated } = useAuth();
+  const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState('professional');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [isStartingTrial, setIsStartingTrial] = useState(false);
 
   const plans = {
     starter: {
@@ -302,15 +307,27 @@ export default function PurchasePage() {
                     Contact Sales Team
                   </button>
                 ) : (
-                  <button className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-                    Start Free Trial
+                  <button
+                    onClick={async () => {
+                      setIsStartingTrial(true);
+                      if (!isAuthenticated) {
+                        router.push('/login?startTrial=true');
+                      } else {
+                        startTrial();
+                        router.push('/dashboard');
+                      }
+                    }}
+                    disabled={isStartingTrial}
+                    className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isStartingTrial ? 'Starting Trial...' : 'Start Free Trial'}
                   </button>
                 )}
                 <Link
-                  href="/dashboard"
+                  href="/login"
                   className="flex-1 text-center bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
                 >
-                  View Demo First
+                  {isAuthenticated ? 'Go to Dashboard' : 'Login First'}
                 </Link>
               </div>
               <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">

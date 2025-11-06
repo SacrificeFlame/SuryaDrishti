@@ -1,6 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import CloudMovementMap from '@/components/dashboard/CloudMovementMap';
 import IrradianceForecast from '@/components/dashboard/IrradianceForecast';
 import AlertsPanel from '@/components/dashboard/AlertsPanel';
@@ -16,7 +19,19 @@ import {
   mockActionsLog
 } from '@/lib/mockData';
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const { user, isTrialActive, trialDaysRemaining, logout } = useAuth();
+
+  useEffect(() => {
+    // Set time only on client side to avoid hydration mismatch
+    setCurrentTime(new Date().toLocaleTimeString());
+    const interval = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
       {/* Header */}
@@ -45,13 +60,27 @@ export default function DashboardPage() {
               >
                 Upgrade
               </Link>
+              {isTrialActive && (
+                <div className="hidden md:flex items-center gap-2 bg-yellow-100 dark:bg-yellow-900/30 px-3 py-1 rounded-full">
+                  <span className="text-xs font-semibold text-yellow-800 dark:text-yellow-300">
+                    Trial: {trialDaysRemaining} days left
+                  </span>
+                </div>
+              )}
               <div className="text-right hidden md:block">
-                <div className="text-sm text-gray-600 dark:text-gray-400">Rajasthan Solar Grid 1</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{user?.username || 'User'}</div>
                 <div className="text-xs text-gray-500 dark:text-gray-500">
                   {mockForecastData.location.lat.toFixed(4)}°N, {mockForecastData.location.lon.toFixed(4)}°E
                 </div>
               </div>
               <ThemeToggle />
+              <button
+                onClick={logout}
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                title="Logout"
+              >
+                Logout
+              </button>
               <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-500/50"></div>
             </div>
           </div>
@@ -100,7 +129,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
             <div>
-              Last updated: {new Date().toLocaleTimeString()}
+              Last updated: {currentTime || 'Loading...'}
             </div>
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-2">
@@ -116,5 +145,13 @@ export default function DashboardPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
   );
 }
