@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./suryादrishti.db
+      - REDIS_URL=redis://redis:6379/0
+      - USE_MOCK_DATA=true
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    depends_on:
+      - redis
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  celery_worker:
+    build: ./backend
+    command: celery -A app.core.celery_app worker --loglevel=info
+    environment:
+      - DATABASE_URL=sqlite:///./suryादrishti.db
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    depends_on:
+      - redis
+      - backend
+
+volumes:
+  redis_data:
+
