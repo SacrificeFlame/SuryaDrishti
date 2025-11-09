@@ -18,6 +18,7 @@ import {
   getLatestSensorReading,
   getSensorHistory,
   getMicrogridInfo,
+  API_BASE_URL_NO_SUFFIX,
 } from '@/lib/api-client';
 import { useMicrogridForecast } from '@/hooks/useForecast';
 import { handleForecastError } from '@/utils/forecastErrorHandler';
@@ -429,7 +430,7 @@ function DashboardContent() {
                 <Link href="/settings" className="relative group">
                   {user?.profile_picture ? (
                     <img
-                      src={user.profile_picture.startsWith('/') ? `http://localhost:8000${user.profile_picture}` : user.profile_picture}
+                      src={user.profile_picture.startsWith('/') ? `${API_BASE_URL_NO_SUFFIX}${user.profile_picture}` : user.profile_picture}
                       alt={user.username}
                       className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-700 object-cover hover:border-amber-500 dark:hover:border-amber-500 transition-colors"
                     />

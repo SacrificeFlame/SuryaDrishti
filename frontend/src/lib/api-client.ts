@@ -1,4 +1,19 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// Get API URL from environment variable
+// In production (Railway), this MUST be set to your backend's public URL
+// Example: https://your-backend.railway.app/api/v1
+// 
+// IMPORTANT: For Railway deployment, set NEXT_PUBLIC_API_URL environment variable
+// in Railway frontend service to your backend's Railway URL
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+
+// Get base URL without /api/v1 suffix (for profile pictures, etc.)
+export const API_BASE_URL_NO_SUFFIX = API_BASE_URL.replace('/api/v1', '');
+
+// Log API URL in development to help with debugging
+if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+  console.log('API Base URL:', API_BASE_URL);
+  console.log('API Base URL (no suffix):', API_BASE_URL_NO_SUFFIX);
+}
 
 // Import types
 import type { NotificationPreferences, NotificationPreferenceRequest } from '@/types/notifications';

@@ -34,7 +34,8 @@ function SettingsContent() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://localhost:8000/api/v1/auth/upload-profile-picture', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      const response = await fetch(`${apiUrl}/auth/upload-profile-picture`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -51,7 +52,8 @@ function SettingsContent() {
       setSuccess('Profile picture uploaded successfully!');
       
       // Refresh user data
-      const userResponse = await fetch('http://localhost:8000/api/v1/auth/me', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      const userResponse = await fetch(`${apiUrl}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -85,7 +87,8 @@ function SettingsContent() {
     setSuccess(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/profile-picture', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      const response = await fetch(`${apiUrl}/auth/profile-picture`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -99,7 +102,8 @@ function SettingsContent() {
       setSuccess('Profile picture deleted successfully!');
       
       // Refresh user data
-      const userResponse = await fetch('http://localhost:8000/api/v1/auth/me', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      const userResponse = await fetch(`${apiUrl}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

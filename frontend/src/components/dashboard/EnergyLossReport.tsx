@@ -47,8 +47,10 @@ export default function EnergyLossReport({ microgridId }: EnergyLossReportProps)
       const endDate = new Date().toISOString().split('T')[0];
       const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
+      // Use environment variable for API URL
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
       const response = await fetch(
-        `http://localhost:8000/api/v1/reports/energy-loss/${microgridId}?start_date=${startDate}&end_date=${endDate}`
+        `${apiUrl}/reports/energy-loss/${microgridId}?start_date=${startDate}&end_date=${endDate}`
       );
       
       if (!response.ok) {

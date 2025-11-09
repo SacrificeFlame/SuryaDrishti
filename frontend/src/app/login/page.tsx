@@ -61,7 +61,8 @@ export default function LoginPage() {
       console.error('[Login Page] Login error:', err);
       setLoading(false);
       if (err instanceof TypeError && err.message.includes('fetch')) {
-        setError('Cannot connect to server. Please make sure the backend is running on http://localhost:8000');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+        setError(`Cannot connect to server. Please make sure the backend is running on ${apiUrl}`);
       } else if (err instanceof Error) {
         setError(err.message);
       } else {

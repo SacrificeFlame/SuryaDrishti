@@ -24,7 +24,8 @@ export default function VerifyEmailPage() {
 
     const verifyEmail = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/v1/auth/verify-email?token=${token}`, {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+        const response = await fetch(`${apiUrl}/auth/verify-email?token=${token}`, {
           method: 'POST',
         });
 
@@ -95,7 +96,8 @@ export default function VerifyEmailPage() {
                     const email = prompt('Enter your email address to resend verification:');
                     if (email) {
                       try {
-                        const response = await fetch('http://localhost:8000/api/v1/auth/resend-verification', {
+                        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+                        const response = await fetch(`${apiUrl}/auth/resend-verification`, {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',
