@@ -4,8 +4,8 @@ from typing import Generator
 from .config import settings
 import os
 
-# Simple SQLite database for now - no migration complexity
-DATABASE_URL = os.getenv('DATABASE_URL', f"sqlite:///{os.getenv('SQLITE_DB_PATH', 'suryादrishti.db')}")
+# Get DATABASE_URL from config (which handles Railway PostgreSQL URLs)
+DATABASE_URL = settings.DATABASE_URL
 
 # Create engine
 if DATABASE_URL.startswith('sqlite'):
@@ -14,7 +14,13 @@ if DATABASE_URL.startswith('sqlite'):
         connect_args={"check_same_thread": False}
     )
 else:
-    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+    # PostgreSQL (Railway) - use connection pooling
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        pool_size=5,
+        max_overflow=10
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

@@ -23,10 +23,90 @@ app = FastAPI(
 # Initialize database tables on startup
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database tables on application startup"""
+    """Initialize database tables on application startup and seed default data"""
     try:
+        # Create all tables
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables initialized")
+        
+        # Seed default data if microgrid_001 doesn't exist
+        from app.core.database import SessionLocal
+        from app.models.database import Microgrid, SensorReading, Device, SystemConfiguration
+        from datetime import datetime
+        
+        db = SessionLocal()
+        try:
+            existing_microgrid = db.query(Microgrid).filter(Microgrid.id == 'microgrid_001').first()
+            
+            if not existing_microgrid:
+                logger.info("Seeding database with default data...")
+                
+                # Create microgrid
+                microgrid = Microgrid(
+                    id='microgrid_001',
+                    name='Rajasthan Solar Grid 1',
+                    latitude=28.4595,
+                    longitude=77.0266,
+                    capacity_kw=50.0,
+                    created_at=datetime.utcnow()
+                )
+                db.add(microgrid)
+                
+                # Create sensor reading
+                sensor_reading = SensorReading(
+                    microgrid_id='microgrid_001',
+                    irradiance=850.0,
+                    power_output=40.0,
+                    temperature=32.0,
+                    humidity=45.0,
+                    wind_speed=3.5,
+                    wind_direction=180.0,
+                    timestamp=datetime.utcnow()
+                )
+                db.add(sensor_reading)
+                
+                # Create default devices
+                devices = [
+                    Device(microgrid_id='microgrid_001', name="Essential Loads", power_consumption_watts=5000, device_type="essential", is_active=True),
+                    Device(microgrid_id='microgrid_001', name="Lighting System", power_consumption_watts=2000, device_type="essential", is_active=True),
+                    Device(microgrid_id='microgrid_001', name="Irrigation Pump 1", power_consumption_watts=3000, device_type="flexible", minimum_runtime_minutes=60, preferred_hours={'start': 8, 'end': 18}, is_active=True),
+                    Device(microgrid_id='microgrid_001', name="Water Heater", power_consumption_watts=2000, device_type="flexible", preferred_hours={'start': 10, 'end': 14}, is_active=True),
+                    Device(microgrid_id='microgrid_001', name="Optional Loads", power_consumption_watts=1000, device_type="optional", is_active=True),
+                ]
+                
+                for device in devices:
+                    existing_device = db.query(Device).filter_by(microgrid_id='microgrid_001', name=device.name).first()
+                    if not existing_device:
+                        db.add(device)
+                
+                # Create default system configuration
+                existing_config = db.query(SystemConfiguration).filter(SystemConfiguration.microgrid_id == 'microgrid_001').first()
+                if not existing_config:
+                    config = SystemConfiguration(
+                        microgrid_id='microgrid_001',
+                        battery_capacity_kwh=100.0,
+                        battery_max_charge_rate_kw=20.0,
+                        battery_max_discharge_rate_kw=20.0,
+                        battery_min_soc=0.2,
+                        battery_max_soc=0.95,
+                        battery_efficiency=0.95,
+                        grid_price_per_kwh=8.5,
+                        generator_fuel_cost_per_liter=85.0,
+                        generator_fuel_consumption_per_kw=0.3,
+                        optimization_preferences={'minimize_grid_import': True, 'maximize_solar_usage': True},
+                        safety_margin=0.1
+                    )
+                    db.add(config)
+                
+                db.commit()
+                logger.info("✅ Database seeded with default data")
+            else:
+                logger.info(f"Database already has microgrid {existing_microgrid.id}")
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Failed to seed database: {e}", exc_info=True)
+        finally:
+            db.close()
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}", exc_info=True)
 

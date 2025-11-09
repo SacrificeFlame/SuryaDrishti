@@ -18,7 +18,15 @@ class Settings(BaseSettings):
     ]
     
     # Database
-    DATABASE_URL: str = "sqlite:///./suryादrishti.db"
+    # Railway provides DATABASE_URL automatically for PostgreSQL
+    # For local development, use SQLite
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL",
+        "sqlite:///./suryादrishti.db"
+    )
+    # Convert Railway's postgres:// to postgresql:// for SQLAlchemy
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
