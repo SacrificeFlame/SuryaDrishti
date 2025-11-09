@@ -352,7 +352,7 @@ async def get_forecast_schedule(
             'generator_max_power_kw': 20.0,
             'generator_min_runtime_minutes': 30,
             'optimization_mode': 'cost',
-            'safety_margin': 0.1
+            'safety_margin_critical_loads': 0.1
         }
         
         scheduler = SchedulerEngine(scheduler_config)
