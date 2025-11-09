@@ -12,8 +12,19 @@ RUN npm ci
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+
+# Copy node_modules from deps
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+
+# Copy all configuration files (needed for path resolution and build)
+COPY package*.json ./
+COPY tsconfig.json jsconfig.json next.config.js ./
+COPY tailwind.config.js postcss.config.js ./
+COPY next-env.d.ts ./
+
+# Copy all source files
+COPY src ./src
+COPY public ./public
 
 # Set environment variables for build
 # Set API URL for build (required for rewrites)
