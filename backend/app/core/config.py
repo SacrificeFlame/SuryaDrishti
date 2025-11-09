@@ -20,14 +20,9 @@ class Settings(BaseSettings):
     # Database
     # Railway provides DATABASE_URL automatically for PostgreSQL
     # For local development, use SQLite
+    # Note: Railway uses postgres:// but SQLAlchemy needs postgresql://
+    # This will be converted in database.py
     DATABASE_URL: str = "sqlite:///./suryादrishti.db"
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # Convert Railway's postgres:// to postgresql:// for SQLAlchemy compatibility
-        if self.DATABASE_URL.startswith("postgres://"):
-            # Use object.__setattr__ to bypass Pydantic's validation
-            object.__setattr__(self, "DATABASE_URL", self.DATABASE_URL.replace("postgres://", "postgresql://", 1))
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"

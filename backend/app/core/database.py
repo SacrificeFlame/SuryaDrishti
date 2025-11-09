@@ -5,7 +5,11 @@ from .config import settings
 import os
 
 # Get DATABASE_URL from config (which handles Railway PostgreSQL URLs)
-DATABASE_URL = settings.DATABASE_URL
+# Railway provides DATABASE_URL as postgres:// but SQLAlchemy needs postgresql://
+DATABASE_URL = os.getenv("DATABASE_URL", settings.DATABASE_URL)
+# Convert Railway's postgres:// to postgresql:// for SQLAlchemy compatibility
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Create engine
 if DATABASE_URL.startswith('sqlite'):
