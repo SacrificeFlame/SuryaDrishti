@@ -100,8 +100,7 @@ function SettingsContent() {
 
       setSuccess('Profile picture deleted successfully!');
       
-      // Refresh user data
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      // Refresh user data (reuse apiUrl from above)
       const userResponse = await fetch(`${apiUrl}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
