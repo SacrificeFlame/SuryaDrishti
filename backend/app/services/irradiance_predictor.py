@@ -1,11 +1,21 @@
 import numpy as np
-import torch
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
-from app.ml.models.cloud_segmentation.unet import CloudSegmentationInference
-from app.ml.models.motion_estimation.optical_flow import CloudMotionTracker
-from app.ml.models.irradiance_forecast.pinn import IrradianceInference
 from app.services.satellite_ingest import SatelliteDataIngester
+
+# Optional torch imports - handle gracefully if not installed
+try:
+    import torch
+    TORCH_AVAILABLE = True
+    from app.ml.models.cloud_segmentation.unet import CloudSegmentationInference
+    from app.ml.models.motion_estimation.optical_flow import CloudMotionTracker
+    from app.ml.models.irradiance_forecast.pinn import IrradianceInference
+except ImportError:
+    TORCH_AVAILABLE = False
+    CloudSegmentationInference = None
+    CloudMotionTracker = None
+    IrradianceInference = None
+    print("Warning: PyTorch not installed. ML features will be limited.")
 from app.utils.physics import (
     calculate_solar_zenith,
     calculate_clear_sky_irradiance,
@@ -64,16 +74,31 @@ class IrradiancePredictor:
     def __init__(self):
         self.satellite_ingester = SatelliteDataIngester(use_mock=settings.USE_MOCK_DATA)
         
-        # Load models
-        device = 'cuda' if settings.USE_GPU and torch.cuda.is_available() else 'cpu'
-        
-        cloud_model_path = settings.CLOUD_SEGMENTATION_MODEL_PATH if os.path.exists(settings.CLOUD_SEGMENTATION_MODEL_PATH) else None
-        self.cloud_detector = CloudSegmentationInference(cloud_model_path, device=device)
-        
-        self.motion_tracker = CloudMotionTracker()
-        
-        irr_model_path = settings.IRRADIANCE_MODEL_PATH if os.path.exists(settings.IRRADIANCE_MODEL_PATH) else None
-        self.irradiance_model = IrradianceInference(irr_model_path, device=device)
+        # Load models only if torch is available
+        if TORCH_AVAILABLE:
+            device = 'cuda' if settings.USE_GPU and torch.cuda.is_available() else 'cpu'
+            
+            cloud_model_path = settings.CLOUD_SEGMENTATION_MODEL_PATH if os.path.exists(settings.CLOUD_SEGMENTATION_MODEL_PATH) else None
+            if CloudSegmentationInference:
+                self.cloud_detector = CloudSegmentationInference(cloud_model_path, device=device)
+            else:
+                self.cloud_detector = None
+            
+            if CloudMotionTracker:
+                self.motion_tracker = CloudMotionTracker()
+            else:
+                self.motion_tracker = None
+            
+            irr_model_path = settings.IRRADIANCE_MODEL_PATH if os.path.exists(settings.IRRADIANCE_MODEL_PATH) else None
+            if IrradianceInference:
+                self.irradiance_model = IrradianceInference(irr_model_path, device=device)
+            else:
+                self.irradiance_model = None
+        else:
+            self.cloud_detector = None
+            self.motion_tracker = None
+            self.irradiance_model = None
+            print("Warning: PyTorch not available. Using fallback cloud detection.")
     
     async def predict_irradiance(self, lat: float, lon: float, 
                                   capacity_kw: float = 50.0,
@@ -106,12 +131,21 @@ class IrradiancePredictor:
         past_images = await self.satellite_ingester.fetch_historical_images(lat, lon, count=3)
         
         # Step 2: Detect clouds
-        cloud_mask = self.cloud_detector.predict(current_image)
+        if self.cloud_detector:
+            cloud_mask = self.cloud_detector.predict(current_image)
+        else:
+            # Fallback: simple threshold-based cloud detection
+            gray = np.mean(current_image[:, :, :3], axis=2)
+            cloud_mask = np.zeros_like(gray, dtype=np.uint8)
+            cloud_mask[gray > 200] = 1  # Thin clouds
+            cloud_mask[gray > 220] = 2  # Thick clouds
+            cloud_mask[gray > 240] = 3  # Storm
         
         # Step 3: Track cloud motion
-        if len(past_images) > 1:
+        if self.motion_tracker and len(past_images) > 1:
             motion_vectors = self.motion_tracker.estimate_motion(past_images[-1], current_image)
         else:
+            # Fallback: zero motion vectors
             motion_vectors = np.zeros((256, 256, 2))
         
         # Step 4: Extract features for ML model
@@ -123,10 +157,17 @@ class IrradiancePredictor:
         physics_params = self._get_physics_params(lat, lon)
         
         # Step 6: Run irradiance prediction
-        predictions_array = self.irradiance_model.predict(
-            features.reshape(1, -1),
-            physics_params
-        )
+        if self.irradiance_model:
+            predictions_array = self.irradiance_model.predict(
+                features.reshape(1, -1),
+                physics_params
+            )
+        else:
+            # Fallback: simple physics-based prediction
+            clear_sky = calculate_clear_sky_irradiance(lat, lon, current_conditions.get('temperature', 32.0))
+            cloud_factor = 1.0 - (np.mean(cloud_mask) / 3.0) * 0.5  # Reduce by cloud coverage
+            base_irr = clear_sky * cloud_factor
+            predictions_array = np.array([[base_irr * 0.8, base_irr, base_irr * 1.2]])  # P10, P50, P90
         
         # Step 7: Generate forecasts for different horizons
         result.current_irradiance = current_conditions['irradiance']

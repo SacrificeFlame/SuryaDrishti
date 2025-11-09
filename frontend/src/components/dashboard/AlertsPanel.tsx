@@ -1,6 +1,7 @@
 'use client';
 
 import { Alert } from '@/types/forecast';
+import { AlertCircle, AlertTriangle, Info, CheckCircle2, Bell } from 'lucide-react';
 
 interface AlertsPanelProps {
   alerts: Alert[];
@@ -10,30 +11,45 @@ export default function AlertsPanel({ alerts }: AlertsPanelProps) {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return 'bg-red-100 border-red-500 text-red-900';
+        return 'border-red-500 bg-red-50 dark:bg-red-900/20';
       case 'warning':
-        return 'bg-yellow-100 border-yellow-500 text-yellow-900';
+        return 'border-amber-500 bg-amber-50 dark:bg-amber-900/20';
       case 'info':
-        return 'bg-blue-100 border-blue-500 text-blue-900';
+        return 'border-blue-500 bg-blue-50 dark:bg-blue-900/20';
       case 'success':
-        return 'bg-green-100 border-green-500 text-green-900';
+        return 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20';
       default:
-        return 'bg-gray-100 border-gray-500 text-gray-900';
+        return 'border-slate-500 bg-slate-50 dark:bg-slate-800/50';
     }
   };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return '🚨';
+        return AlertCircle;
       case 'warning':
-        return '⚠️';
+        return AlertTriangle;
       case 'info':
-        return 'ℹ️';
+        return Info;
       case 'success':
-        return '✅';
+        return CheckCircle2;
       default:
-        return '📌';
+        return Bell;
+    }
+  };
+
+  const getSeverityIconColor = (severity: string) => {
+    switch (severity) {
+      case 'critical':
+        return 'text-red-600 dark:text-red-400';
+      case 'warning':
+        return 'text-amber-600 dark:text-amber-400';
+      case 'info':
+        return 'text-blue-600 dark:text-blue-400';
+      case 'success':
+        return 'text-emerald-600 dark:text-emerald-400';
+      default:
+        return 'text-slate-600 dark:text-slate-400';
     }
   };
 
@@ -50,50 +66,63 @@ export default function AlertsPanel({ alerts }: AlertsPanelProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors duration-300">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Active Alerts</h2>
-        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-          {alerts.length}
-        </span>
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover">
+      <div className="flex justify-between items-center mb-5">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-1">Active Alerts</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">System notifications</p>
+        </div>
+        {alerts.length > 0 && (
+          <span className="bg-red-500 text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm">
+            {alerts.length}
+          </span>
+        )}
       </div>
 
-      <div className="space-y-3 max-h-96 overflow-y-auto">
+      <div className="space-y-2 max-h-96 overflow-y-auto">
         {alerts.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <div className="text-4xl mb-2">✓</div>
-            <div>No active alerts</div>
-            <div className="text-sm">System operating normally</div>
+          <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center mx-auto mb-3 border border-emerald-200 dark:border-emerald-800">
+              <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400 stroke-[1.5]" />
+            </div>
+            <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-1">All Systems Operational</div>
+            <div className="text-xs">No active alerts</div>
           </div>
         ) : (
-          alerts.map((alert) => (
-            <div
-              key={alert.id}
-              className={`border-l-4 rounded-r-lg p-4 ${getSeverityColor(alert.severity)}`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-2 flex-1">
-                  <span className="text-xl">{getSeverityIcon(alert.severity)}</span>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold capitalize">{alert.severity}</span>
-                      <span className="text-xs opacity-75">{formatTime(alert.timestamp)}</span>
+          alerts.map((alert) => {
+            const IconComponent = getSeverityIcon(alert.severity);
+            const iconColor = getSeverityIconColor(alert.severity);
+            return (
+              <div
+                key={alert.id}
+                className={`border-l-4 rounded-lg p-4 bg-slate-50 dark:bg-slate-800/50 ${getSeverityColor(alert.severity)}`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className={`w-8 h-8 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-700 flex-shrink-0`}>
+                      <IconComponent className={`w-4 h-4 ${iconColor} stroke-[1.5]`} />
                     </div>
-                    <p className="text-sm mb-2">{alert.message}</p>
-                    {alert.action && (
-                      <div className="bg-white bg-opacity-50 rounded p-2 text-xs">
-                        <div className="font-semibold mb-1">Recommended Action:</div>
-                        <div>{alert.action}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold capitalize text-slate-900 dark:text-slate-50">{alert.severity}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{formatTime(alert.timestamp)}</span>
                       </div>
-                    )}
+                      <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">{alert.message}</p>
+                      {alert.action && (
+                        <div className="bg-white dark:bg-slate-900 rounded-lg p-2.5 text-xs border border-slate-200 dark:border-slate-700">
+                          <div className="font-semibold mb-1 text-slate-900 dark:text-slate-50">Recommended Action:</div>
+                          <div className="text-slate-600 dark:text-slate-400">{alert.action}</div>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                  <button className="text-xs px-3 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 transition text-slate-700 dark:text-slate-300">
+                    Acknowledge
+                  </button>
                 </div>
-                <button className="text-xs px-3 py-1 bg-white bg-opacity-50 hover:bg-opacity-75 rounded transition">
-                  Acknowledge
-                </button>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

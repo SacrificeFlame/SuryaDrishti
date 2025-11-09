@@ -146,7 +146,7 @@ export default function PurchasePage() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">{plan.name}</h3>
                   {selectedPlan === key && (
-                    <span className="text-2xl">✓</span>
+                    <span className="text-xs font-semibold text-green-600 dark:text-green-400">SELECTED</span>
                   )}
                 </div>
                 <div className="mb-4">
@@ -166,7 +166,7 @@ export default function PurchasePage() {
                 <ul className="space-y-2">
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <span className="text-green-500 mt-0.5">✓</span>
+                      <span className="text-green-500 font-bold mt-0.5">•</span>
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -341,19 +341,19 @@ export default function PurchasePage() {
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Trusted by microgrids across India</p>
             <div className="flex flex-wrap justify-center items-center gap-8 text-gray-400 dark:text-gray-600">
               <div className="flex items-center gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-green-500 font-bold">•</span>
                 <span>ISO 27001 Certified</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-green-500 font-bold">•</span>
                 <span>99.9% Uptime SLA</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-green-500 font-bold">•</span>
                 <span>24/7 Support</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-green-500 font-bold">•</span>
                 <span>Money-Back Guarantee</span>
               </div>
             </div>

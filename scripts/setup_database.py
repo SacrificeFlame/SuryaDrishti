@@ -10,12 +10,19 @@ from datetime import datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
 
 from app.core.database import engine, SessionLocal
-from app.models.database import Base, Microgrid, SensorReading
+from app.models.database import Base, Microgrid, SensorReading, User, Device, Schedule, SystemConfiguration
 from sqlalchemy import text
 
 def setup_database():
     """Initialize database tables and seed data"""
     print("Setting up database...")
+    
+    # Create upload directories
+    import os
+    from pathlib import Path
+    upload_dir = Path("uploads/profiles")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    print("[OK] Upload directories created")
     
     # Create all tables
     Base.metadata.create_all(bind=engine)

@@ -49,13 +49,13 @@ def generate_forecast_task(microgrid_id: str):
                 db.add(forecast)
                 db.commit()
                 
-                print(f"✅ Forecast generated for {microgrid.id}")
+                print(f"[SUCCESS] Forecast generated for {microgrid.id}")
                 
             finally:
                 loop.close()
         
     except Exception as e:
-        print(f"❌ Error generating forecast: {e}")
+        print(f"[ERROR] Error generating forecast: {e}")
         db.rollback()
     finally:
         db.close()
@@ -65,7 +65,7 @@ def retrain_models_task():
     """
     Weekly task to retrain models with latest data.
     """
-    print("🔄 Starting model retraining...")
+    print("[INFO] Starting model retraining...")
     
     # Import training functions
     from app.ml.models.cloud_segmentation.train import train_cloud_segmentation
@@ -86,8 +86,8 @@ def retrain_models_task():
             batch_size=64
         )
         
-        print("✅ Model retraining complete!")
+        print("[SUCCESS] Model retraining complete!")
         
     except Exception as e:
-        print(f"❌ Error during retraining: {e}")
+        print(f"[ERROR] Error during retraining: {e}")
 

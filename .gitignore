@@ -52,6 +52,26 @@ logs/
 # Environment
 .env
 .env.local
+.env.*.local
+*.env
+
+# Database files (don't commit databases)
+*.db
+*.sqlite
+*.sqlite3
+backend/*.db
+backend/*.sqlite
+
+# Uploads and user data
+backend/uploads/*
+!backend/uploads/.gitkeep
+uploads/*
+!uploads/.gitkeep
+
+# Sensitive data
+backend/data/models/*.joblib
+backend/data/models/*.pth
+backend/data/models/*.pkl
 
 # Testing
 .pytest_cache/

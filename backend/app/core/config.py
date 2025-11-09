@@ -10,7 +10,12 @@ class Settings(BaseSettings):
     
     # API
     API_V1_PREFIX: str = "/api/v1"
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    ALLOWED_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ]
     
     # Database
     DATABASE_URL: str = "sqlite:///./suryादrishti.db"
@@ -21,10 +26,32 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str = "dev-secret-key-change-in-production"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ALGORITHM: str = "HS256"
+    
+    # Email Configuration
+    SMTP_HOST: Optional[str] = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    EMAIL_FROM: Optional[str] = None
+    EMAIL_FROM_NAME: str = "SuryaDrishti"
+    
+    # Frontend URL for email links
+    FRONTEND_URL: str = "http://localhost:3000"
+    
+    # File Upload Configuration
+    UPLOAD_DIR: str = "uploads"
+    PROFILE_PICTURE_DIR: str = "uploads/profiles"
+    MAX_FILE_SIZE: int = 5 * 1024 * 1024  # 5MB
+    ALLOWED_IMAGE_TYPES: List[str] = ["image/jpeg", "image/png", "image/gif", "image/webp"]
     
     # Satellite Data Sources
     INSAT_API_KEY: Optional[str] = None
-    USE_MOCK_DATA: bool = True
+    NASA_API_KEY: Optional[str] = None
+    OPENWEATHER_API_KEY: Optional[str] = None
+    SENTINEL_HUB_CLIENT_ID: Optional[str] = None
+    SENTINEL_HUB_CLIENT_SECRET: Optional[str] = None
+    USE_MOCK_DATA: bool = False  # Default to False, can be overridden by .env
     
     # ML Models
     CLOUD_SEGMENTATION_MODEL_PATH: str = "data/models/cloud_seg_v1.pth"
@@ -56,6 +83,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # Ignore extra fields in .env
 
 settings = Settings()
 

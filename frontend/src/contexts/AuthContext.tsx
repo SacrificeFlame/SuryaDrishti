@@ -4,8 +4,11 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useRouter } from 'next/navigation';
 
 export interface User {
+  id?: number;
   username: string;
   email?: string;
+  profile_picture?: string | null;
+  is_verified?: boolean;
   trialStartDate?: string;
   trialEndDate?: string;
   plan?: 'trial' | 'starter' | 'professional' | 'enterprise';
@@ -49,43 +52,151 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    // Check credentials
-    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-      const userData: User = {
-        username: 'admin',
-        email: 'admin@suryadrishti.com',
-        plan: 'trial',
+    try {
+      console.log('[Login] Attempting login for:', username);
+      
+      // Use OAuth2PasswordRequestForm format (username field can be email or username)
+      const formData = new FormData();
+      formData.append('username', username); // OAuth2 uses 'username' field for both email and username
+      formData.append('password', password);
+
+      console.log('[Login] Sending login request...');
+      
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      let response;
+      try {
+        response = await fetch('http://localhost:8000/api/v1/auth/login', {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Request timeout: Backend server is not responding. Please check if the server is running.');
+        }
+        throw new Error(`Network error: ${fetchError.message}`);
+      }
+
+      console.log('[Login] Response status:', response.status);
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          const text = await response.text();
+          console.error('[Login] Failed to parse error response:', text);
+          throw new Error(`Login failed: ${response.status} ${response.statusText}`);
+        }
+        console.error('[Login] Login failed:', errorData.detail || errorData.message);
+        throw new Error(errorData.detail || errorData.message || 'Login failed');
+      }
+
+      const tokenData = await response.json();
+      console.log('[Login] Token received');
+      const accessToken = tokenData.access_token;
+
+      if (!accessToken) {
+        throw new Error('No access token received');
+      }
+
+      // Store token
+      localStorage.setItem('token', accessToken);
+
+      // Fetch user info
+      console.log('[Login] Fetching user info...');
+      
+      const userController = new AbortController();
+      const userTimeoutId = setTimeout(() => userController.abort(), 10000);
+      
+      let userResponse;
+      try {
+        userResponse = await fetch('http://localhost:8000/api/v1/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          signal: userController.signal,
+        });
+        clearTimeout(userTimeoutId);
+      } catch (fetchError: any) {
+        clearTimeout(userTimeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Request timeout: Failed to fetch user information.');
+        }
+        throw new Error(`Network error: ${fetchError.message}`);
+      }
+
+      if (!userResponse.ok) {
+        console.error('[Login] Failed to fetch user info:', userResponse.status);
+        throw new Error('Failed to fetch user information');
+      }
+
+      const userData = await userResponse.json();
+      console.log('[Login] User data received:', userData);
+
+      // Transform to User interface
+      const user: User = {
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
+        profile_picture: userData.profile_picture,
+        is_verified: userData.is_verified,
+        plan: userData.plan as 'trial' | 'starter' | 'professional' | 'enterprise',
+        trialStartDate: userData.trial_start_date || undefined,
+        trialEndDate: userData.trial_end_date || undefined,
       };
 
-      // Check if user already has trial data
-      const savedUser = localStorage.getItem('user');
-      if (savedUser) {
-        try {
-          const parsedUser = JSON.parse(savedUser);
-          userData.trialStartDate = parsedUser.trialStartDate || new Date().toISOString();
-          userData.trialEndDate = parsedUser.trialEndDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
-          userData.plan = parsedUser.plan || 'trial';
-        } catch (e) {
-          // If parsing fails, start new trial
+      setUser(user);
+      localStorage.setItem('user', JSON.stringify(user));
+      console.log('[Login] Login successful!');
+      return true;
+    } catch (error) {
+      console.error('[Login] Login error:', error);
+      
+      // Fallback to admin credentials for backward compatibility
+      if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+        console.log('[Login] Using admin fallback');
+        const userData: User = {
+          username: 'admin',
+          email: 'admin@suryadrishti.com',
+          plan: 'trial',
+        };
+
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          try {
+            const parsedUser = JSON.parse(savedUser);
+            userData.trialStartDate = parsedUser.trialStartDate || new Date().toISOString();
+            userData.trialEndDate = parsedUser.trialEndDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+            userData.plan = parsedUser.plan || 'trial';
+          } catch (e) {
+            userData.trialStartDate = new Date().toISOString();
+            userData.trialEndDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+          }
+        } else {
           userData.trialStartDate = new Date().toISOString();
           userData.trialEndDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
         }
-      } else {
-        // Start new trial
-        userData.trialStartDate = new Date().toISOString();
-        userData.trialEndDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
-      }
 
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      return true;
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        return true;
+      }
+      
+      // Re-throw the error so the login page can display it
+      throw error;
     }
-    return false;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     router.push('/login');
   };
 

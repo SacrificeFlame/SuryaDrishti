@@ -18,9 +18,9 @@ export default function ThemeToggle() {
       >
         <span className="flex h-full w-full items-center justify-center">
           {theme === 'dark' ? (
-            <span className="text-yellow-400 text-lg">🌙</span>
+            <span className="text-gray-400 text-xs font-bold">D</span>
           ) : (
-            <span className="text-yellow-500 text-lg">☀️</span>
+            <span className="text-yellow-500 text-xs font-bold">L</span>
           )}
         </span>
       </span>

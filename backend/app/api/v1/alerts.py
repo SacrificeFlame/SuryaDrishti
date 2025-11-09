@@ -5,30 +5,37 @@ from app.models.schemas import AlertResponse, AlertAcknowledge
 from app.models.database import Alert
 from typing import List
 from datetime import datetime, timedelta
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.get("/{microgrid_id}", response_model=List[AlertResponse])
 async def get_alerts(microgrid_id: str, limit: int = 20, db: Session = Depends(get_db)):
     """
     Get recent alerts for a microgrid.
     """
-    alerts = db.query(Alert).filter(
-        Alert.microgrid_id == microgrid_id
-    ).order_by(Alert.timestamp.desc()).limit(limit).all()
-    
-    return [
-        AlertResponse(
-            id=alert.id,
-            microgrid_id=alert.microgrid_id,
-            timestamp=alert.timestamp,
-            severity=alert.severity,
-            message=alert.message,
-            action_taken=alert.action_taken,
-            resolved_at=alert.resolved_at,
-            acknowledged=bool(alert.acknowledged)
-        ) for alert in alerts
-    ]
+    try:
+        alerts = db.query(Alert).filter(
+            Alert.microgrid_id == microgrid_id
+        ).order_by(Alert.timestamp.desc()).limit(limit).all()
+        
+        return [
+            AlertResponse(
+                id=alert.id,
+                microgrid_id=alert.microgrid_id,
+                timestamp=alert.timestamp,
+                severity=alert.severity,
+                message=alert.message,
+                action_taken=alert.action_taken,
+                resolved_at=alert.resolved_at,
+                acknowledged=bool(alert.acknowledged)
+            ) for alert in alerts
+        ]
+    except Exception as e:
+        logger.error(f"Error getting alerts for {microgrid_id}: {e}", exc_info=True)
+        # Return empty list on error instead of 500
+        return []
 
 @router.post("/{alert_id}/acknowledge")
 async def acknowledge_alert(alert_id: int, data: AlertAcknowledge, db: Session = Depends(get_db)):
@@ -49,7 +56,11 @@ async def create_alert(microgrid_id: str, severity: str, message: str,
                        action: str = None, db: Session = Depends(get_db)):
     """
     Create a new alert (internal use by services).
+    Automatically sends SMS notification if configured.
     """
+    from app.services.notification_service import notification_service
+    from app.models.database import NotificationPreference
+    
     alert = Alert(
         microgrid_id=microgrid_id,
         timestamp=datetime.utcnow(),
@@ -59,6 +70,34 @@ async def create_alert(microgrid_id: str, severity: str, message: str,
     )
     db.add(alert)
     db.commit()
+    
+    # Send SMS notification if preferences allow
+    try:
+        prefs = db.query(NotificationPreference).filter(
+            NotificationPreference.microgrid_id == microgrid_id
+        ).first()
+        
+        if prefs and prefs.enable_sms and prefs.phone_number:
+            # Check if this severity level is enabled
+            should_send = False
+            if severity == 'critical' and prefs.enable_critical_alerts:
+                should_send = True
+            elif severity == 'warning' and prefs.enable_warning_alerts:
+                should_send = True
+            elif severity == 'info' and prefs.enable_info_alerts:
+                should_send = True
+            
+            if should_send:
+                notification_service.send_alert_notification(
+                    phone_number=prefs.phone_number,
+                    alert_type=severity,
+                    message=message,
+                    microgrid_id=microgrid_id,
+                    severity=severity
+                )
+    except Exception as e:
+        logger.error(f"Failed to send notification for alert {alert.id}: {e}", exc_info=True)
+        # Don't fail the alert creation if notification fails
     
     return {"status": "success", "alert_id": alert.id}
 

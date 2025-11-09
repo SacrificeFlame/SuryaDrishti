@@ -1,3 +1,4 @@
+y
 # SuryaDrishti - Setup Instructions
 
 ## ⚠️ Python Not Found
@@ -22,6 +23,7 @@ Python is required to run this project. Please install it first.
 
 If you have Docker Desktop installed:
 ```powershell
+
 docker-compose up -d
 ```
 

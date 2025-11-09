@@ -5,8 +5,10 @@ from app.models.schemas import SensorReadingRequest, SensorReadingResponse
 from app.models.database import SensorReading
 from typing import List
 from datetime import datetime
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.post("/reading", response_model=SensorReadingResponse)
 async def ingest_sensor_reading(reading: SensorReadingRequest, db: Session = Depends(get_db)):
@@ -45,45 +47,56 @@ async def get_latest_reading(microgrid_id: str, db: Session = Depends(get_db)):
     """
     Get latest sensor reading for a microgrid.
     """
-    reading = db.query(SensorReading).filter(
-        SensorReading.microgrid_id == microgrid_id
-    ).order_by(SensorReading.timestamp.desc()).first()
-    
-    if not reading:
-        raise HTTPException(status_code=404, detail="No sensor readings found")
-    
-    return SensorReadingResponse(
-        id=reading.id,
-        microgrid_id=reading.microgrid_id,
-        timestamp=reading.timestamp,
-        irradiance=reading.irradiance,
-        power_output=reading.power_output,
-        temperature=reading.temperature,
-        humidity=reading.humidity,
-        wind_speed=reading.wind_speed,
-        wind_direction=reading.wind_direction
-    )
+    try:
+        reading = db.query(SensorReading).filter(
+            SensorReading.microgrid_id == microgrid_id
+        ).order_by(SensorReading.timestamp.desc()).first()
+        
+        if not reading:
+            raise HTTPException(status_code=404, detail=f"No sensor readings found for microgrid {microgrid_id}")
+        
+        return SensorReadingResponse(
+            id=reading.id,
+            microgrid_id=reading.microgrid_id,
+            timestamp=reading.timestamp,
+            irradiance=reading.irradiance,
+            power_output=reading.power_output,
+            temperature=reading.temperature,
+            humidity=reading.humidity,
+            wind_speed=reading.wind_speed,
+            wind_direction=reading.wind_direction
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting latest reading for {microgrid_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.get("/{microgrid_id}/history", response_model=List[SensorReadingResponse])
 async def get_sensor_history(microgrid_id: str, limit: int = 100, db: Session = Depends(get_db)):
     """
     Get historical sensor readings.
     """
-    readings = db.query(SensorReading).filter(
-        SensorReading.microgrid_id == microgrid_id
-    ).order_by(SensorReading.timestamp.desc()).limit(limit).all()
-    
-    return [
-        SensorReadingResponse(
-            id=r.id,
-            microgrid_id=r.microgrid_id,
-            timestamp=r.timestamp,
-            irradiance=r.irradiance,
-            power_output=r.power_output,
-            temperature=r.temperature,
-            humidity=r.humidity,
-            wind_speed=r.wind_speed,
-            wind_direction=r.wind_direction
-        ) for r in readings
-    ]
+    try:
+        readings = db.query(SensorReading).filter(
+            SensorReading.microgrid_id == microgrid_id
+        ).order_by(SensorReading.timestamp.desc()).limit(limit).all()
+        
+        return [
+            SensorReadingResponse(
+                id=r.id,
+                microgrid_id=r.microgrid_id,
+                timestamp=r.timestamp,
+                irradiance=r.irradiance,
+                power_output=r.power_output,
+                temperature=r.temperature,
+                humidity=r.humidity,
+                wind_speed=r.wind_speed,
+                wind_direction=r.wind_direction
+            ) for r in readings
+        ]
+    except Exception as e:
+        logger.error(f"Error getting sensor history for {microgrid_id}: {e}", exc_info=True)
+        # Return empty list on error instead of 500 (e.g., if table doesn't exist)
+        return []
 

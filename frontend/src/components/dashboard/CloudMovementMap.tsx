@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useMemo } from 'react';
+import { Satellite, Cloud, CloudRain, CloudSnow } from 'lucide-react';
 
 interface CloudMovementMapProps {
   cloudData: {
@@ -11,153 +12,205 @@ interface CloudMovementMapProps {
 }
 
 export default function CloudMovementMap({ cloudData, location }: CloudMovementMapProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Analyze cloud data and create statistics
+  const cloudStats = useMemo(() => {
+    if (!cloudData?.cloud_map) {
+      return {
+        clear: 0,
+        thin: 0,
+        thick: 0,
+        storm: 0,
+        total: 0,
+        cloudCoverage: 0,
+      };
+    }
 
-  useEffect(() => {
-    if (!canvasRef.current || !cloudData) return;
+    let clear = 0;
+    let thin = 0;
+    let thick = 0;
+    let storm = 0;
+    let total = 0;
 
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw cloud map
-    const cellWidth = canvas.width / cloudData.cloud_map[0].length;
-    const cellHeight = canvas.height / cloudData.cloud_map.length;
-
-    cloudData.cloud_map.forEach((row, i) => {
-      row.forEach((cell, j) => {
-        const x = j * cellWidth;
-        const y = i * cellHeight;
-
-        // Color based on cloud type
-        if (cell === 0) {
-          ctx.fillStyle = 'rgba(135, 206, 235, 0.2)'; // Clear sky - light blue
-        } else if (cell === 1) {
-          ctx.fillStyle = 'rgba(200, 200, 200, 0.5)'; // Thin cloud - light gray
-        } else if (cell === 2) {
-          ctx.fillStyle = 'rgba(128, 128, 128, 0.7)'; // Thick cloud - gray
-        } else {
-          ctx.fillStyle = 'rgba(64, 64, 64, 0.9)'; // Storm - dark gray
-        }
-
-        ctx.fillRect(x, y, cellWidth, cellHeight);
+    cloudData.cloud_map.forEach((row) => {
+      row.forEach((cell) => {
+        total++;
+        if (cell === 0) clear++;
+        else if (cell === 1) thin++;
+        else if (cell === 2) thick++;
+        else storm++;
       });
     });
 
-    // Draw motion vectors
-    const vectorCellWidth = canvas.width / cloudData.motion_vectors[0].length;
-    const vectorCellHeight = canvas.height / cloudData.motion_vectors.length;
-    const arrowScale = 300;
+    const cloudCoverage = ((thin + thick + storm) / total) * 100;
 
-    ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
-    ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
-    ctx.lineWidth = 2;
-
-    cloudData.motion_vectors.forEach((row, i) => {
-      row.forEach((vector, j) => {
-        const startX = (j + 0.5) * vectorCellWidth;
-        const startY = (i + 0.5) * vectorCellHeight;
-        const endX = startX + vector.x * arrowScale;
-        const endY = startY + vector.y * arrowScale;
-
-        // Draw arrow line
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(endX, endY);
-        ctx.stroke();
-
-        // Draw arrowhead
-        const angle = Math.atan2(endY - startY, endX - startX);
-        const headLength = 8;
-        ctx.beginPath();
-        ctx.moveTo(endX, endY);
-        ctx.lineTo(
-          endX - headLength * Math.cos(angle - Math.PI / 6),
-          endY - headLength * Math.sin(angle - Math.PI / 6)
-        );
-        ctx.lineTo(
-          endX - headLength * Math.cos(angle + Math.PI / 6),
-          endY - headLength * Math.sin(angle + Math.PI / 6)
-        );
-        ctx.closePath();
-        ctx.fill();
-      });
-    });
-
-    // Draw microgrid location (center marker)
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-
-    // Draw safe zone circle
-    ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 40, 0, 2 * Math.PI);
-    ctx.stroke();
-
-    // Draw microgrid marker
-    ctx.fillStyle = '#10b981';
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 6, 0, 2 * Math.PI);
-    ctx.fill();
-
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 6, 0, 2 * Math.PI);
-    ctx.stroke();
-
+    return {
+      clear,
+      thin,
+      thick,
+      storm,
+      total,
+      cloudCoverage: cloudCoverage.toFixed(1),
+    };
   }, [cloudData]);
 
+  // Calculate motion statistics
+  const motionStats = useMemo(() => {
+    if (!cloudData?.motion_vectors) {
+      return [];
+    }
+
+    const speeds: number[] = [];
+    cloudData.motion_vectors.forEach((row) => {
+      row.forEach((vector) => {
+        const speed = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+        if (speed > 0.01) {
+          speeds.push(speed);
+        }
+      });
+    });
+
+    // Group speeds into bins for bar chart
+    const bins = Array(10).fill(0);
+    const maxSpeed = Math.max(...speeds, 1);
+    speeds.forEach((speed) => {
+      const binIndex = Math.min(Math.floor((speed / maxSpeed) * 10), 9);
+      bins[binIndex]++;
+    });
+
+    return bins;
+  }, [cloudData]);
+
+  const maxMotion = Math.max(...motionStats, 1);
+
+  const maxCloudCount = Math.max(cloudStats.clear, cloudStats.thin, cloudStats.thick, cloudStats.storm, 1);
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors duration-300">
-      <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Cloud Movement Analysis</h2>
-      
-      <div className="relative">
-        <canvas
-          ref={canvasRef}
-          width={600}
-          height={400}
-          className="w-full h-auto border border-gray-200 dark:border-gray-700 rounded"
-        />
-        
-        <div className="absolute top-2 right-2 bg-white dark:bg-gray-800 bg-opacity-90 dark:bg-opacity-90 rounded p-2 text-xs border border-gray-200 dark:border-gray-700">
-          <div className="font-semibold mb-1 text-gray-900 dark:text-white">Location</div>
-          <div className="text-gray-700 dark:text-gray-300">{location.lat.toFixed(4)}°N</div>
-          <div className="text-gray-700 dark:text-gray-300">{location.lon.toFixed(4)}°E</div>
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover">
+      <div className="flex justify-between iteimage.pngms-center mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700">
+            <Satellite className="w-5 h-5 text-slate-600 dark:text-slate-400 stroke-[1.5]" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-1">Cloud Movement Analysis</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Cloud coverage & movement statistics</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Cloud Coverage</div>
+          <div className="text-lg font-bold text-slate-900 dark:text-slate-50">{cloudStats.cloudCoverage}%</div>
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-700 dark:text-gray-300">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-blue-200 border border-gray-300"></div>
-          <span>Clear Sky</span>
+      {/* Cloud Coverage Bar Chart */}
+      <div className="mb-6">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Cloud Coverage Distribution</h3>
+        <div className="space-y-3">
+          {/* Clear Sky */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded bg-blue-200 dark:bg-blue-800 border border-blue-300 dark:border-blue-700"></div>
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Clear Sky</span>
+              </div>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{cloudStats.clear} ({((cloudStats.clear / cloudStats.total) * 100).toFixed(1)}%)</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full transition-all duration-300"
+                style={{ width: `${(cloudStats.clear / maxCloudCount) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Thin Cloud */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                <Cloud className="w-3 h-3 text-slate-400 dark:text-slate-500 stroke-[1.5]" />
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Thin Cloud</span>
+              </div>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{cloudStats.thin} ({((cloudStats.thin / cloudStats.total) * 100).toFixed(1)}%)</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-slate-300 to-slate-400 rounded-full transition-all duration-300"
+                style={{ width: `${(cloudStats.thin / maxCloudCount) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Thick Cloud */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                <CloudRain className="w-3 h-3 text-slate-500 dark:text-slate-400 stroke-[1.5]" />
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Thick Cloud</span>
+              </div>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{cloudStats.thick} ({((cloudStats.thick / cloudStats.total) * 100).toFixed(1)}%)</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-slate-500 to-slate-600 rounded-full transition-all duration-300"
+                style={{ width: `${(cloudStats.thick / maxCloudCount) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Storm */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                <CloudSnow className="w-3 h-3 text-slate-700 dark:text-slate-300 stroke-[1.5]" />
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Storm</span>
+              </div>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{cloudStats.storm} ({((cloudStats.storm / cloudStats.total) * 100).toFixed(1)}%)</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-slate-700 to-slate-800 rounded-full transition-all duration-300"
+                style={{ width: `${(cloudStats.storm / maxCloudCount) * 100}%` }}
+              ></div>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-300 border border-gray-300"></div>
-          <span>Thin Cloud</span>
+      </div>
+
+      {/* Motion Speed Distribution Bar Chart */}
+      {motionStats.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Cloud Motion Speed Distribution</h3>
+          <div className="h-48 flex items-end justify-between gap-1">
+            {motionStats.map((count, idx) => (
+              <div key={idx} className="flex-1 flex flex-col items-center group">
+                <div
+                  className="w-full bg-gradient-to-t from-amber-500 to-orange-500 rounded-t transition-all hover:from-amber-600 hover:to-orange-600 cursor-pointer"
+                  style={{ height: `${(count / maxMotion) * 100}%` }}
+                  title={`Speed bin ${idx + 1}: ${count} vectors`}
+                ></div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">{idx + 1}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 text-center">
+            Motion speed bins (low → high)
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-500 border border-gray-300"></div>
-          <span>Thick Cloud</span>
+      )}
+
+      {/* Location Info */}
+      <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-slate-500 dark:text-slate-400">Location</span>
+          <span className="font-mono text-slate-700 dark:text-slate-300">
+            {location.lat.toFixed(4)}°N, {location.lon.toFixed(4)}°E
+          </span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-700 border border-gray-300"></div>
-          <span>Storm</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-1 h-4 bg-red-500"></div>
-          <span>Wind Direction</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white"></div>
-          <span>Microgrid</span>
+        <div className="flex items-center justify-between text-xs mt-1">
+          <span className="text-slate-500 dark:text-slate-400">Total Cells Analyzed</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">{cloudStats.total}</span>
         </div>
       </div>
     </div>
   );
 }
-

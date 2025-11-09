@@ -1,6 +1,7 @@
 'use client';
 
 import { SystemStatus as SystemStatusType } from '@/types/forecast';
+import { Battery, Zap, Sun, Activity, Clock } from 'lucide-react';
 
 interface SystemStatusProps {
   status: SystemStatusType;
@@ -10,33 +11,41 @@ export default function SystemStatus({ status }: SystemStatusProps) {
   const getStatusColor = (dieselStatus: string) => {
     switch (dieselStatus) {
       case 'running':
-        return 'text-green-600 bg-green-100';
+        return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
       case 'standby':
-        return 'text-yellow-600 bg-yellow-100';
+        return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
       case 'off':
-        return 'text-gray-600 bg-gray-100';
+        return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
       default:
-        return 'text-gray-600 bg-gray-100';
+        return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
     }
   };
 
   const getBatteryColor = (soc: number) => {
-    if (soc >= 80) return 'text-green-600';
-    if (soc >= 50) return 'text-yellow-600';
-    if (soc >= 20) return 'text-orange-600';
-    return 'text-red-600';
+    if (soc >= 80) return 'text-green-600 dark:text-green-400';
+    if (soc >= 50) return 'text-yellow-600 dark:text-yellow-400';
+    if (soc >= 20) return 'text-orange-600 dark:text-orange-400';
+    return 'text-red-600 dark:text-red-400';
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors duration-300">
-      <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">System Status</h2>
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover">
+      <div className="mb-6">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-1">System Status</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Real-time system metrics</p>
+      </div>
 
       {/* Battery SOC Gauge */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Battery State of Charge</span>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700">
+              <Battery className={`w-4 h-4 ${getBatteryColor(status.battery_soc)} stroke-[1.5]`} />
+            </div>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Battery State of Charge</span>
+          </div>
           <span className={`text-2xl font-bold ${getBatteryColor(status.battery_soc)}`}>
-            {status.battery_soc}%
+            {Math.round(status.battery_soc)}%
           </span>
         </div>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
@@ -58,9 +67,14 @@ export default function SystemStatus({ status }: SystemStatusProps) {
       {/* Diesel Status */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Diesel Generator</span>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700">
+              <Zap className="w-4 h-4 text-slate-600 dark:text-slate-400 stroke-[1.5]" />
+            </div>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Diesel Generator</span>
+          </div>
           <span
-            className={`px-3 py-1 rounded-full text-sm font-semibold uppercase ${getStatusColor(
+            className={`px-3 py-1 rounded-lg text-xs font-semibold uppercase border ${getStatusColor(
               status.diesel_status
             )}`}
           >
@@ -71,12 +85,20 @@ export default function SystemStatus({ status }: SystemStatusProps) {
 
       {/* Load Distribution */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Power Distribution</h3>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700">
+            <Activity className="w-4 h-4 text-slate-600 dark:text-slate-400 stroke-[1.5]" />
+          </div>
+          <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Power Distribution</h3>
+        </div>
         <div className="space-y-3">
           <div>
             <div className="flex justify-between text-sm mb-1">
-              <span className="text-gray-600 dark:text-gray-400">Solar Generation</span>
-              <span className="font-bold text-green-600">{status.solar_generation_kw.toFixed(1)} kW</span>
+              <div className="flex items-center gap-2">
+                <Sun className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[1.5]" />
+                <span className="text-slate-600 dark:text-slate-400">Solar Generation</span>
+              </div>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{status.solar_generation_kw.toFixed(1)} kW</span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div
@@ -89,7 +111,7 @@ export default function SystemStatus({ status }: SystemStatusProps) {
           <div>
             <div className="flex justify-between text-sm mb-1">
               <span className="text-gray-600 dark:text-gray-400">Load</span>
-              <span className="font-bold text-blue-600">{status.load_kw.toFixed(1)} kW</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400">{status.load_kw.toFixed(1)} kW</span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div
@@ -103,7 +125,7 @@ export default function SystemStatus({ status }: SystemStatusProps) {
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-gray-600 dark:text-gray-400">Grid Import</span>
-                <span className="font-bold text-purple-600">{status.grid_import_kw.toFixed(1)} kW</span>
+                <span className="font-bold text-purple-600 dark:text-purple-400">{status.grid_import_kw.toFixed(1)} kW</span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div
@@ -117,11 +139,26 @@ export default function SystemStatus({ status }: SystemStatusProps) {
       </div>
 
       {/* Uptime */}
-      <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600 dark:text-gray-400">System Uptime</span>
-          <span className="text-lg font-bold text-gray-900 dark:text-white">
-            {Math.floor(status.uptime_hours / 24)}d {status.uptime_hours % 24}h
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700">
+              <Clock className="w-4 h-4 text-slate-600 dark:text-slate-400 stroke-[1.5]" />
+            </div>
+            <span className="text-sm text-slate-600 dark:text-slate-400">System Uptime</span>
+          </div>
+          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">
+            {(() => {
+              const days = Math.floor(status.uptime_hours / 24);
+              const hours = Math.floor(status.uptime_hours % 24);
+              if (days > 0 && hours > 0) {
+                return `${days}d ${hours}h`;
+              } else if (days > 0) {
+                return `${days}d`;
+              } else {
+                return `${hours}h`;
+              }
+            })()}
           </span>
         </div>
       </div>
