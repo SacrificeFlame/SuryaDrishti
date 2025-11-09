@@ -20,7 +20,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY package*.json ./
 COPY tsconfig.json jsconfig.json next.config.js ./
 COPY tailwind.config.js postcss.config.js ./
-COPY next-env.d.ts ./
 
 # Copy all source files
 COPY src ./src
