@@ -15,12 +15,16 @@ Your code is now on GitHub: `https://github.com/saatyakkapoor/avi_k_proj`
 1. **Create New Service:**
    - Click "New Project" → "Deploy from GitHub repo"
    - Select your repository: `saatyakkapoor/avi_k_proj`
-   - Select "Backend" as the service name
+   - Railway will try to auto-detect - **DON'T deploy yet!**
 
-2. **Configure Backend:**
-   - **Root Directory:** `backend`
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+2. **Configure Backend Service:**
+   - Go to the service settings (gear icon)
+   - **IMPORTANT:** Set **Root Directory** to: `backend`
+   - Railway will auto-detect Python and use `requirements.txt`
+   - The `Procfile` in backend/ will be used automatically
+   - Or manually set:
+     - **Build Command:** (leave empty, Railway auto-detects)
+     - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 
 3. **Add PostgreSQL Database:**
    - Click "New" → "Database" → "Add PostgreSQL"
@@ -56,13 +60,16 @@ Your code is now on GitHub: `https://github.com/saatyakkapoor/avi_k_proj`
 1. **Create New Service:**
    - In the same project, click "New" → "GitHub Repo"
    - Select the same repository
-   - Select "Frontend" as the service name
+   - Railway will try to auto-detect - **DON'T deploy yet!**
 
-2. **Configure Frontend:**
-   - **Root Directory:** `frontend`
-   - **Build Command:** `npm install && npm run build`
-   - **Start Command:** `npm start`
-   - **Install Command:** `npm install`
+2. **Configure Frontend Service:**
+   - Go to the service settings (gear icon)
+   - **IMPORTANT:** Set **Root Directory** to: `frontend`
+   - Railway will auto-detect Node.js and use `package.json`
+   - The `Procfile` in frontend/ will be used automatically
+   - Or manually set:
+     - **Build Command:** `npm install && npm run build`
+     - **Start Command:** `npm start`
 
 3. **Set Environment Variables:**
    - Go to "Variables" tab
