@@ -198,7 +198,13 @@ function DashboardContent() {
     uptime: 0,
     co2Avoided: 0
   });
-  const [actionsLog, setActionsLog] = useState([]);
+  const [actionsLog, setActionsLog] = useState<Array<{
+    id: number;
+    timestamp: string;
+    action: string;
+    reason: string;
+    status: string;
+  }>>([]);
   const [location, setLocation] = useState({ lat: 28.4595, lon: 77.0266 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -343,7 +349,7 @@ function DashboardContent() {
               id: idx + 1,
               timestamp: action.timestamp,
               action: action.action,
-              reason: action.details,
+              reason: action.details || '',
               status: 'completed',
             }))
           );

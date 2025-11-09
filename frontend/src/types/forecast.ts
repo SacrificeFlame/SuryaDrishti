@@ -145,7 +145,7 @@ export interface ForecastResponse {
   current_power_output: number;
   cloud_data?: {
     cloud_map: number[][];
-    motion_vectors: Array<{ x: number; y: number }>;
+    motion_vectors: Array<Array<{ x: number; y: number }>>;
   };
 }
 
@@ -158,4 +158,16 @@ export interface SystemStatus {
   grid_import_kw: number;
   uptime_hours: number;
   last_updated: string;
+}
+
+// Alert type
+export interface Alert {
+  id: number;
+  microgrid_id?: string;
+  timestamp: string;
+  severity: 'critical' | 'warning' | 'info' | 'success';
+  message: string;
+  action_taken?: string;
+  action?: string | null;
+  acknowledged?: boolean;
 }
