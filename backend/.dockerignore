@@ -1,0 +1,75 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.venv
+venv/
+env/
+
+# Large ML model files
+*.pth
+*.pkl
+*.joblib
+*.h5
+*.ckpt
+data/models/
+data/raw/
+data/processed/
+backend/data/models/
+backend/data/raw/
+backend/data/processed/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Documentation
+*.md
+docs/
+README.md
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Node modules (if any)
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+logs/
+
+# Git
+.git
+.gitignore
+
+# Scripts (not needed in production)
+scripts/
+*.ps1
+*.bat
+*.sh
+
