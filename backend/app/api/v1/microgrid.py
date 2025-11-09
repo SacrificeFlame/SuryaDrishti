@@ -19,7 +19,10 @@ async def get_microgrid(microgrid_id: str, db: Session = Depends(get_db), respon
     try:
         microgrid = db.query(Microgrid).filter(Microgrid.id == microgrid_id).first()
         if not microgrid:
-            raise HTTPException(status_code=404, detail=f"Microgrid {microgrid_id} not found")
+            # Log detailed error information
+            all_microgrids = db.query(Microgrid).all()
+            logger.error(f"Microgrid {microgrid_id} not found. Available microgrids: {[mg.id for mg in all_microgrids]}")
+            raise HTTPException(status_code=404, detail=f"Microgrid {microgrid_id} not found. Available microgrids: {[mg.id for mg in all_microgrids]}")
         
         return MicrogridInfo(
             id=microgrid.id,
@@ -33,6 +36,8 @@ async def get_microgrid(microgrid_id: str, db: Session = Depends(get_db), respon
         raise
     except Exception as e:
         logger.error(f"Error getting microgrid {microgrid_id}: {e}", exc_info=True)
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.get("/{microgrid_id}/status", response_model=SystemStatus)

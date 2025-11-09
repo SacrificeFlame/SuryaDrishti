@@ -175,6 +175,7 @@ app.include_router(configurations.router, prefix="/api/v1", tags=["configuration
 app.include_router(forecast_validation.router, prefix="/api/v1", tags=["forecast-validation"])
 app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["notifications"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
+app.include_router(db_init.router, prefix="/api/v1", tags=["database"])
 
 # WebSocket Manager
 class ConnectionManager:
@@ -200,7 +201,50 @@ manager = ConnectionManager()
 
 @app.get("/health")
 async def health_check():
+    """Health check endpoint"""
     return {"status": "healthy", "service": "suryादrishti"}
+
+@app.get("/api/v1/health/database")
+async def health_check_database():
+    """Health check endpoint that verifies database connectivity and microgrid existence"""
+    try:
+        from app.core.database import SessionLocal
+        from app.models.database import Microgrid
+        
+        db = SessionLocal()
+        try:
+            # Test database connection
+            microgrid_count = db.query(Microgrid).count()
+            microgrid_001 = db.query(Microgrid).filter(Microgrid.id == 'microgrid_001').first()
+            
+            return {
+                "status": "healthy",
+                "database": "connected",
+                "microgrid_count": microgrid_count,
+                "microgrid_001_exists": microgrid_001 is not None,
+                "microgrid_001_details": {
+                    "id": microgrid_001.id,
+                    "name": microgrid_001.name,
+                    "latitude": microgrid_001.latitude,
+                    "longitude": microgrid_001.longitude,
+                    "capacity_kw": microgrid_001.capacity_kw
+                } if microgrid_001 else None
+            }
+        except Exception as e:
+            logger.error(f"Database health check failed: {e}", exc_info=True)
+            return {
+                "status": "unhealthy",
+                "database": "error",
+                "error": str(e)
+            }
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"Health check failed: {e}", exc_info=True)
+        return {
+            "status": "unhealthy",
+            "error": str(e)
+        }
 
 @app.websocket("/ws/updates")
 async def websocket_endpoint(websocket: WebSocket):
