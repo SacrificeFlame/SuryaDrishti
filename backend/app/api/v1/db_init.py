@@ -87,11 +87,17 @@ async def init_database():
                         battery_min_soc=0.2,
                         battery_max_soc=0.95,
                         battery_efficiency=0.95,
-                        grid_price_per_kwh=8.5,
+                        grid_peak_rate_per_kwh=10.0,
+                        grid_off_peak_rate_per_kwh=5.0,
+                        grid_peak_hours={'start': 8, 'end': 20},
+                        grid_export_rate_per_kwh=4.0,
+                        grid_export_enabled=True,
                         generator_fuel_cost_per_liter=85.0,
-                        generator_fuel_consumption_per_kw=0.3,
-                        optimization_preferences={'minimize_grid_import': True, 'maximize_solar_usage': True},
-                        safety_margin=0.1
+                        generator_fuel_consumption_l_per_kwh=0.25,
+                        generator_min_runtime_minutes=30,
+                        generator_max_power_kw=20.0,
+                        optimization_mode='cost',
+                        safety_margin_critical_loads=0.1
                     )
                     db.add(config)
                     logger.info("Created default system configuration")
