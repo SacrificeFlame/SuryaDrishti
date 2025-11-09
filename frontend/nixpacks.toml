@@ -8,14 +8,7 @@ cmds = [
 
 [phases.build]
 cmds = [
-  "pwd",
-  "ls -la",
-  "ls -la src/ || echo 'src directory not found'",
-  "ls -la src/lib/ || echo 'src/lib not found'",
-  "ls -la src/types/ || echo 'src/types not found'",
-  "test -f tsconfig.json && echo 'tsconfig.json exists' || echo 'tsconfig.json NOT FOUND'",
-  "test -f next.config.js && echo 'next.config.js exists' || echo 'next.config.js NOT FOUND'",
-  "npm run build 2>&1"
+  "npm run build"
 ]
 
 [start]
