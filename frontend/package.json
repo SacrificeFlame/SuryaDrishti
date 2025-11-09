@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:verbose": "NODE_OPTIONS='--trace-warnings' next build",
     "start": "next start",
     "lint": "next lint"
   },

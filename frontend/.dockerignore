@@ -6,7 +6,7 @@ node_modules
 # Testing
 /coverage
 
-# Next.js
+# Next.js build output (excluded from build context, but needed for build)
 /.next/
 /out/
 
@@ -31,12 +31,14 @@ yarn-error.log*
 
 # TypeScript
 *.tsbuildinfo
-next-env.d.ts
+# next-env.d.ts - DO NOT IGNORE (needed for TypeScript)
 
-# DO NOT IGNORE - These are needed for build:
+# CRITICAL: DO NOT IGNORE THESE - Required for build:
 # tsconfig.json
-# jsconfig.json
+# jsconfig.json  
 # next.config.js
 # package.json
+# package-lock.json
 # src/
+# public/
 
