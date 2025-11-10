@@ -14,6 +14,38 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Helper function to check if origin is allowed (defined before middleware)
+def is_origin_allowed(origin: str) -> bool:
+    """Check if origin is allowed for CORS"""
+    if not origin:
+        return False
+    
+    # Check if origin is in allowed list
+    if origin in settings.ALLOWED_ORIGINS:
+        return True
+    
+    # Check if origin is a Railway domain
+    if origin.endswith(".railway.app") or origin.endswith(".up.railway.app"):
+        return True
+    
+    # Check if origin is localhost (development)
+    if settings.DEBUG and ("localhost" in origin or "127.0.0.1" in origin):
+        return True
+    
+    # Check if origin matches custom domain pattern (suryadrishti.in)
+    if "suryadrishti.in" in origin:
+        return True
+    
+    # Check if any allowed origin domain is in the request origin
+    for allowed_origin in settings.ALLOWED_ORIGINS:
+        if allowed_origin and "." in allowed_origin:
+            # Extract domain from allowed origin (remove protocol)
+            domain = allowed_origin.replace("https://", "").replace("http://", "").split("/")[0]
+            if domain in origin:
+                return True
+    
+    return False
+
 app = FastAPI(
     title="SuryaDrishti API",
     description="Real-time solar forecasting for rural microgrids",
@@ -177,23 +209,14 @@ app.add_middleware(
 # Handle OPTIONS preflight requests explicitly for CORS
 @app.options("/{full_path:path}")
 async def options_handler(request: Request, full_path: str):
-    """Handle OPTIONS preflight requests for CORS - allows Railway domains"""
+    """Handle OPTIONS preflight requests for CORS - allows Railway and custom domains"""
     origin = request.headers.get("origin")
     response = JSONResponse(content={}, status_code=200)
     
-    # Allow Railway domains, localhost, and configured origins
-    if origin:
-        if (origin.endswith(".railway.app") or 
-            origin.endswith(".up.railway.app") or 
-            origin in settings.ALLOWED_ORIGINS or
-            (settings.DEBUG and ("localhost" in origin or "127.0.0.1" in origin))):
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-        else:
-            # Allow all in development
-            response.headers["Access-Control-Allow-Origin"] = "*"
-    else:
-        # No origin header - allow all
+    if origin and is_origin_allowed(origin):
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    elif settings.DEBUG:
         response.headers["Access-Control-Allow-Origin"] = "*"
     
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS"
@@ -205,26 +228,63 @@ async def options_handler(request: Request, full_path: str):
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    origin = request.headers.get("origin")
+    
+    headers = {
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+    }
+    
+    if origin and is_origin_allowed(origin):
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+    elif settings.DEBUG:
+        headers["Access-Control-Allow-Origin"] = "*"
+    
     return JSONResponse(
         status_code=500,
         content={"detail": f"Internal server error: {str(exc)}"},
-        headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "*", "Access-Control-Allow-Headers": "*"}
+        headers=headers
     )
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    origin = request.headers.get("origin")
+    headers = {
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+    }
+    
+    if origin and is_origin_allowed(origin):
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+    elif settings.DEBUG:
+        headers["Access-Control-Allow-Origin"] = "*"
+    
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
-        headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "*", "Access-Control-Allow-Headers": "*"}
+        headers=headers
     )
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    origin = request.headers.get("origin")
+    headers = {
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+    }
+    
+    if origin and is_origin_allowed(origin):
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+    elif settings.DEBUG:
+        headers["Access-Control-Allow-Origin"] = "*"
+    
     return JSONResponse(
         status_code=422,
         content={"detail": exc.errors()},
-        headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "*", "Access-Control-Allow-Headers": "*"}
+        headers=headers
     )
 
 # Include routers
