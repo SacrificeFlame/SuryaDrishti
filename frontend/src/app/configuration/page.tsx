@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getConfiguration, updateConfiguration, SystemConfiguration, SystemConfigurationUpdate } from '@/lib/api-client';
-import { Save, Battery, Zap, Fuel, Settings } from 'lucide-react';
+import { Save, Battery, Zap, Fuel, Settings, ArrowLeft } from 'lucide-react';
 
 const DEFAULT_MICROGRID_ID = 'microgrid_001';
 
@@ -66,6 +67,13 @@ function ConfigurationPageContent() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
       <div className="max-w-4xl mx-auto px-6 lg:px-8">
         <div className="mb-8">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-sm font-medium">Back to Dashboard</span>
+          </Link>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">System Configuration</h1>
           <p className="text-slate-600 dark:text-slate-400 mt-2">
             Configure battery, grid, and generator parameters for optimization

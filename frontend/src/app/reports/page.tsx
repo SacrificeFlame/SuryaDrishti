@@ -187,7 +187,7 @@ function ReportsContent() {
         </div>
 
         {/* Energy Loss Report */}
-        {energyLossReport && (
+        {energyLossReport ? (
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
@@ -210,7 +210,7 @@ function ReportsContent() {
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Energy Saved</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                  {energyLossReport.metrics.energy_saved_kwh.toFixed(1)} kWh
+                  {energyLossReport.metrics?.energy_saved_kwh?.toFixed(1) || '0.0'} kWh
                 </p>
               </div>
 
@@ -220,7 +220,7 @@ function ReportsContent() {
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Prevented Outages</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                  {energyLossReport.metrics.prevented_outages}
+                  {energyLossReport.metrics?.prevented_outages || 0}
                 </p>
               </div>
 
@@ -230,7 +230,7 @@ function ReportsContent() {
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Battery Cycles Saved</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                  {energyLossReport.metrics.battery_cycles_saved.toFixed(1)}
+                  {energyLossReport.metrics?.battery_cycles_saved?.toFixed(1) || '0.0'}
                 </p>
               </div>
 
@@ -240,7 +240,7 @@ function ReportsContent() {
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Forecast Accuracy</span>
                 </div>
                 <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                  {energyLossReport.metrics.forecast_accuracy_percent.toFixed(1)}%
+                  {energyLossReport.metrics?.forecast_accuracy_percent?.toFixed(1) || '0.0'}%
                 </p>
               </div>
             </div>
@@ -249,27 +249,34 @@ function ReportsContent() {
               <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Total Alerts</p>
                 <p className="text-xl font-bold text-slate-900 dark:text-slate-50">
-                  {energyLossReport.summary.total_alerts}
+                  {energyLossReport.summary?.total_alerts || 0}
                 </p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Critical Alerts</p>
                 <p className="text-xl font-bold text-red-600 dark:text-red-400">
-                  {energyLossReport.summary.critical_alerts}
+                  {energyLossReport.summary?.critical_alerts || 0}
                 </p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Actions Taken</p>
                 <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                  {energyLossReport.summary.actions_taken}
+                  {energyLossReport.summary?.actions_taken || 0}
                 </p>
               </div>
+            </div>
+          </div>
+        ) : !loading && (
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+            <div className="text-center py-8">
+              <p className="text-slate-600 dark:text-slate-400">No energy loss report data available for the selected period.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-500 mt-2">Try selecting a different date range.</p>
             </div>
           </div>
         )}
 
         {/* Performance Report */}
-        {performanceReport && (
+        {performanceReport ? (
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
@@ -290,19 +297,19 @@ function ReportsContent() {
               <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Forecasts Generated</p>
                 <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                  {performanceReport.metrics.forecasts_generated}
+                  {performanceReport.metrics?.forecasts_generated || 0}
                 </p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Sensor Readings</p>
                 <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                  {performanceReport.metrics.sensor_readings}
+                  {performanceReport.metrics?.sensor_readings || 0}
                 </p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">System Uptime</p>
                 <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                  {performanceReport.metrics.system_uptime_percent.toFixed(1)}%
+                  {performanceReport.metrics?.system_uptime_percent?.toFixed(1) || '0.0'}%
                 </p>
               </div>
             </div>
@@ -311,21 +318,28 @@ function ReportsContent() {
               <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Critical Alerts</p>
                 <p className="text-xl font-bold text-red-600 dark:text-red-400">
-                  {performanceReport.alerts_by_severity.critical}
+                  {performanceReport.alerts_by_severity?.critical || 0}
                 </p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Warning Alerts</p>
                 <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
-                  {performanceReport.alerts_by_severity.warning}
+                  {performanceReport.alerts_by_severity?.warning || 0}
                 </p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Info Alerts</p>
                 <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                  {performanceReport.alerts_by_severity.info}
+                  {performanceReport.alerts_by_severity?.info || 0}
                 </p>
               </div>
+            </div>
+          </div>
+        ) : !loading && (
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+            <div className="text-center py-8">
+              <p className="text-slate-600 dark:text-slate-400">No performance report data available for the selected period.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-500 mt-2">Try selecting a different number of days.</p>
             </div>
           </div>
         )}

@@ -9,7 +9,6 @@ import IrradianceForecast from '@/components/dashboard/IrradianceForecast';
 import AlertsPanel from '@/components/dashboard/AlertsPanel';
 import SystemStatus from '@/components/dashboard/SystemStatus';
 import PerformanceMetrics from '@/components/dashboard/PerformanceMetrics';
-import ActionsLog from '@/components/dashboard/ActionsLog';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import ThemeToggle from '@/components/ThemeToggle';
 import { MapPin, Bell, Cloud, Battery, Activity, TrendingUp, Map, ArrowRight } from 'lucide-react';
@@ -200,13 +199,6 @@ function DashboardContent() {
     uptime: 0,
     co2Avoided: 0
   });
-  const [actionsLog, setActionsLog] = useState<Array<{
-    id: number;
-    timestamp: string;
-    action: string;
-    reason: string;
-    status: string;
-  }>>([]);
   const [location, setLocation] = useState({ lat: 28.4595, lon: 77.0266 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -361,19 +353,6 @@ function DashboardContent() {
           });
         }
 
-        // Transform actions log from system status recent_actions
-        if (statusResponse.status === 'fulfilled' && statusResponse.value.recent_actions) {
-          const recentActions = statusResponse.value.recent_actions;
-          setActionsLog(
-            recentActions.map((action, idx) => ({
-              id: idx + 1,
-              timestamp: action.timestamp,
-              action: action.action,
-              reason: action.details || '',
-              status: 'completed',
-            }))
-          );
-        }
       } catch (err: any) {
         console.error('Error fetching dashboard data:', err);
         setError(err.message || 'Failed to load dashboard data');
@@ -567,139 +546,37 @@ function DashboardContent() {
                   </div>
                 </div>
 
+                {/* Quick Summary Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Current Power</div>
+                    <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                      {forecastData?.current_power_output?.toFixed(1) || systemStatus?.solar_generation_kw?.toFixed(1) || '0.0'} kW
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Battery SOC</div>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                      {systemStatus?.battery_soc?.toFixed(1) || '0.0'}%
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Active Alerts</div>
+                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                      {alerts.filter(a => !a.acknowledged).length}
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Forecast Confidence</div>
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {((forecastData?.confidence || 0.85) * 100).toFixed(0)}%
+                    </div>
+                  </div>
+                </div>
+
                 {/* Performance Metrics */}
                 <div className="mb-8">
                   <PerformanceMetrics metrics={performanceMetrics} />
-                </div>
-
-                {/* Main Grid - Preview Cards */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                  {/* Left Column - Forecast and Cloud Map Preview */}
-                  <div className="lg:col-span-2 space-y-6">
-                    <Link href="/dashboard/forecast" className="block group">
-                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover group-hover:border-amber-500 dark:group-hover:border-amber-500 transition-all">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50">Solar Forecast</h3>
-                          <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
-                        </div>
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-3 gap-3">
-                            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                              <div className="text-xs text-blue-600 dark:text-blue-400 mb-1">Current Irradiance</div>
-                              <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
-                                {forecastData?.current_irradiance?.toFixed(0) || 0} W/m²
-                              </div>
-                            </div>
-                            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
-                              <div className="text-xs text-emerald-600 dark:text-emerald-400 mb-1">Power Output</div>
-                              <div className="text-lg font-bold text-emerald-700 dark:text-emerald-300">
-                                {forecastData?.current_power_output?.toFixed(1) || 0} kW
-                              </div>
-                            </div>
-                            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
-                              <div className="text-xs text-purple-600 dark:text-purple-400 mb-1">Confidence</div>
-                              <div className="text-lg font-bold text-purple-700 dark:text-purple-300">
-                                {((forecastData?.confidence || 0.85) * 100).toFixed(0)}%
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-sm text-slate-500 dark:text-slate-400">
-                            {forecastData?.forecasts?.length || 0} forecast points available
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                    
-                    <Link href="/dashboard/cloud-map" className="block group">
-                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover group-hover:border-amber-500 dark:group-hover:border-amber-500 transition-all">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50">Cloud Movement Map</h3>
-                          <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
-                        </div>
-                        <div className="h-48 bg-gradient-to-br from-blue-100 to-sky-100 dark:from-blue-900/20 dark:to-sky-900/20 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700">
-                          <div className="text-center">
-                            <Map className="w-12 h-12 text-sky-500 dark:text-sky-400 mx-auto mb-2" />
-                            <div className="text-sm text-slate-600 dark:text-slate-400">Cloud coverage visualization</div>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </div>
-
-                  {/* Right Column - Alerts and Status Preview */}
-                  <div className="space-y-6">
-                    <Link href="/dashboard/alerts" className="block group">
-                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover group-hover:border-amber-500 dark:group-hover:border-amber-500 transition-all">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50">Alerts</h3>
-                          <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
-                        </div>
-                        <div className="space-y-2">
-                          {alerts.slice(0, 3).map((alert) => (
-                            <div key={alert.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
-                                  alert.severity === 'critical' ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300' :
-                                  alert.severity === 'warning' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300' :
-                                  'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                                }`}>
-                                  {alert.severity}
-                                </span>
-                                <span className="text-xs text-slate-500 dark:text-slate-400">
-                                  {new Date(alert.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                              </div>
-                              <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-2">{alert.message}</p>
-                            </div>
-                          ))}
-                          {alerts.length === 0 && (
-                            <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-                              No active alerts
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </Link>
-                    <Link href="/dashboard/system-status" className="block group">
-                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover group-hover:border-amber-500 dark:group-hover:border-amber-500 transition-all">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50">System Status</h3>
-                          <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
-                        </div>
-                        {systemStatus ? (
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                              <span className="text-sm text-slate-600 dark:text-slate-400">Battery SOC</span>
-                              <span className="text-lg font-bold text-slate-900 dark:text-slate-50">
-                                {systemStatus.battery_soc.toFixed(1)}%
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                              <span className="text-sm text-slate-600 dark:text-slate-400">Solar Generation</span>
-                              <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                                {systemStatus.solar_generation_kw.toFixed(1)} kW
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                              <span className="text-sm text-slate-600 dark:text-slate-400">Total Load</span>
-                              <span className="text-lg font-bold text-slate-900 dark:text-slate-50">
-                                {systemStatus.load_kw.toFixed(1)} kW
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-                            No status data available
-                          </div>
-                        )}
-                      </div>
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Actions Log */}
-                <div>
-                  <ActionsLog actions={actionsLog} />
                 </div>
               </>
             )}
