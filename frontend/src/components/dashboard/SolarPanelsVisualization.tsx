@@ -15,45 +15,117 @@ interface SolarPanel {
 interface SolarPanelsVisualizationProps {
   totalPower?: number;
   panelCount?: number;
+  latitude?: number;
+  longitude?: number;
+}
+
+// Calculate sunrise and sunset times for a given date and location
+function calculateSunriseSunset(lat: number, lon: number, date: Date): { sunrise: Date; sunset: Date } {
+  // Convert latitude and longitude to radians
+  const latRad = (lat * Math.PI) / 180;
+  
+  // Calculate day of year
+  const start = new Date(date.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Solar declination angle
+  const declination = 23.45 * Math.sin((360 * (284 + dayOfYear) / 365) * Math.PI / 180) * Math.PI / 180;
+  
+  // Hour angle for sunrise/sunset
+  const hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(declination));
+  
+  // Convert hour angle to time (in hours from noon)
+  const sunriseHour = 12 - (hourAngle * 180 / Math.PI) / 15;
+  const sunsetHour = 12 + (hourAngle * 180 / Math.PI) / 15;
+  
+  // Create sunrise and sunset dates
+  const sunrise = new Date(date);
+  sunrise.setHours(Math.floor(sunriseHour), Math.round((sunriseHour % 1) * 60), 0, 0);
+  
+  const sunset = new Date(date);
+  sunset.setHours(Math.floor(sunsetHour), Math.round((sunsetHour % 1) * 60), 0, 0);
+  
+  // Adjust for longitude (rough approximation: 4 minutes per degree)
+  const timeOffset = (lon / 15) * 60; // minutes
+  sunrise.setMinutes(sunrise.getMinutes() + timeOffset);
+  sunset.setMinutes(sunset.getMinutes() + timeOffset);
+  
+  return { sunrise, sunset };
+}
+
+// Check if current time is between sunrise and sunset
+function isDaytime(lat: number, lon: number, currentTime: Date = new Date()): boolean {
+  const { sunrise, sunset } = calculateSunriseSunset(lat, lon, currentTime);
+  return currentTime >= sunrise && currentTime <= sunset;
 }
 
 export default function SolarPanelsVisualization({ 
   totalPower = 0, 
-  panelCount = 24 
+  panelCount = 24,
+  latitude = 28.4595, // Default to Rajasthan coordinates
+  longitude = 77.0266
 }: SolarPanelsVisualizationProps) {
   const [panels, setPanels] = useState<SolarPanel[]>([]);
   const [tiltAngle, setTiltAngle] = useState(30); // Default 30 degrees tilt
   const [azimuthAngle, setAzimuthAngle] = useState(180); // Default 180 degrees (south)
   const [autoAdjust, setAutoAdjust] = useState(true); // Auto-adjust based on sun position
   const [optimizationMode, setOptimizationMode] = useState<'manual' | 'auto' | 'optimal'>('optimal');
+  const [isCurrentlyDaytime, setIsCurrentlyDaytime] = useState(true);
+
+  // Check if it's currently daytime (update every minute)
+  useEffect(() => {
+    const checkDaytime = () => {
+      setIsCurrentlyDaytime(isDaytime(latitude, longitude));
+    };
+    
+    checkDaytime(); // Check immediately
+    const interval = setInterval(checkDaytime, 60000); // Check every minute
+    
+    return () => clearInterval(interval);
+  }, [latitude, longitude]);
 
   // Calculate optimal angle based on time of day and sun position
   useEffect(() => {
-    if (autoAdjust && optimizationMode === 'auto') {
+    if (autoAdjust && optimizationMode === 'auto' && isCurrentlyDaytime) {
       const now = new Date();
       const hour = now.getHours();
       const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000);
       
       // Calculate sun elevation (simplified)
-      const latitude = 28.4595; // Rajasthan latitude
-      const declination = 23.45 * Math.sin((360 * (284 + dayOfYear) / 365) * Math.PI / 180);
-      const hourAngle = (hour - 12) * 15;
+      const latRad = latitude * Math.PI / 180;
+      const declination = 23.45 * Math.sin((360 * (284 + dayOfYear) / 365) * Math.PI / 180) * Math.PI / 180;
+      const hourAngle = (hour - 12) * 15 * Math.PI / 180;
       const elevation = Math.asin(
-        Math.sin(latitude * Math.PI / 180) * Math.sin(declination * Math.PI / 180) +
-        Math.cos(latitude * Math.PI / 180) * Math.cos(declination * Math.PI / 180) * Math.cos(hourAngle * Math.PI / 180)
+        Math.sin(latRad) * Math.sin(declination) +
+        Math.cos(latRad) * Math.cos(declination) * Math.cos(hourAngle)
       ) * 180 / Math.PI;
       
       // Optimal tilt is approximately equal to latitude, adjusted for season
-      const optimalTilt = Math.max(0, Math.min(90, latitude - declination + (elevation > 0 ? elevation * 0.3 : 0)));
+      const optimalTilt = Math.max(0, Math.min(90, latitude - (declination * 180 / Math.PI) + (elevation > 0 ? elevation * 0.3 : 0)));
       setTiltAngle(Math.round(optimalTilt));
       
       // Azimuth tracks sun position (180 = south, optimal for northern hemisphere)
       const optimalAzimuth = hour < 12 ? 180 - (12 - hour) * 15 : 180 + (hour - 12) * 15;
       setAzimuthAngle(Math.max(90, Math.min(270, optimalAzimuth)));
     }
-  }, [autoAdjust, optimizationMode]);
+  }, [autoAdjust, optimizationMode, isCurrentlyDaytime, latitude]);
 
   useEffect(() => {
+    // Only generate power during daytime
+    if (!isCurrentlyDaytime) {
+      // Nighttime: all panels inactive, no power generation
+      const generatedPanels: SolarPanel[] = Array.from({ length: panelCount }, (_, i) => ({
+        id: i + 1,
+        power: 0,
+        status: 'inactive' as const,
+        efficiency: 0,
+        angle: tiltAngle,
+        azimuth: azimuthAngle,
+      }));
+      setPanels(generatedPanels);
+      return;
+    }
+
     // Calculate power efficiency based on angle alignment with sun
     const calculatePowerMultiplier = (panelAngle: number, panelAzimuth: number) => {
       // Simplified: panels aligned with optimal angles get better efficiency
@@ -63,7 +135,7 @@ export default function SolarPanelsVisualization({
       return Math.max(0.5, Math.min(1.0, alignment));
     };
 
-    // Generate panel data with angles
+    // Generate panel data with angles (only during daytime)
     const generatedPanels: SolarPanel[] = Array.from({ length: panelCount }, (_, i) => {
       const panelAngle = tiltAngle + (Math.random() - 0.5) * 5; // Slight variation
       const panelAzimuth = azimuthAngle + (Math.random() - 0.5) * 10; // Slight variation
@@ -71,19 +143,19 @@ export default function SolarPanelsVisualization({
       
       return {
         id: i + 1,
-        power: totalPower > 0 
+        power: totalPower > 0 && isCurrentlyDaytime
           ? (totalPower / panelCount) * powerMultiplier * (0.8 + Math.random() * 0.4)
           : 0,
-        status: totalPower > 0 
+        status: totalPower > 0 && isCurrentlyDaytime
           ? (Math.random() > 0.1 ? 'active' : Math.random() > 0.5 ? 'inactive' : 'maintenance')
           : 'inactive',
-        efficiency: (0.15 + Math.random() * 0.1) * powerMultiplier,
+        efficiency: isCurrentlyDaytime ? (0.15 + Math.random() * 0.1) * powerMultiplier : 0,
         angle: panelAngle,
         azimuth: panelAzimuth,
       };
     });
     setPanels(generatedPanels);
-  }, [totalPower, panelCount, tiltAngle, azimuthAngle]);
+  }, [totalPower, panelCount, tiltAngle, azimuthAngle, isCurrentlyDaytime]);
 
   const activePanels = panels.filter(p => p.status === 'active').length;
   const totalGenerated = panels.reduce((sum, p) => sum + p.power, 0);
@@ -92,16 +164,26 @@ export default function SolarPanelsVisualization({
     : 0;
 
   const handleOptimize = () => {
+    if (!isCurrentlyDaytime) {
+      // Can't optimize at night, but set to optimal day angles
+      setTiltAngle(Math.round(latitude)); // Optimal tilt equals latitude
+      setAzimuthAngle(180); // South-facing
+      return;
+    }
+    
     setOptimizationMode('optimal');
     setAutoAdjust(true);
     // Calculate optimal angles for maximum sun exposure
-    const now = new Date();
-    const hour = now.getHours();
-    // Optimal tilt for Rajasthan (latitude ~28.5°) is approximately 28-30 degrees
-    setTiltAngle(28);
-    // Optimal azimuth for maximum sun exposure (south-facing)
+    // Optimal tilt for location is approximately equal to latitude
+    setTiltAngle(Math.round(latitude));
+    // Optimal azimuth for maximum sun exposure (south-facing in northern hemisphere)
     setAzimuthAngle(180);
   };
+
+  // Get sunrise and sunset times for display
+  const { sunrise, sunset } = calculateSunriseSunset(latitude, longitude, new Date());
+  const sunriseTime = sunrise.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const sunsetTime = sunset.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
@@ -118,8 +200,13 @@ export default function SolarPanelsVisualization({
         <div className="text-right">
           <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Total Output</div>
           <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {totalGenerated.toFixed(1)} kW
+            {isCurrentlyDaytime ? totalGenerated.toFixed(1) : '0.0'} kW
           </div>
+          {!isCurrentlyDaytime && (
+            <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+              Nighttime (Sun: {sunriseTime} - {sunsetTime})
+            </div>
+          )}
         </div>
       </div>
 
@@ -240,17 +327,17 @@ export default function SolarPanelsVisualization({
             <div className="h-full flex flex-col items-center justify-center p-2">
               <Sun 
                 className={`w-4 h-4 ${
-                  panel.status === 'active' 
+                  panel.status === 'active' && isCurrentlyDaytime
                     ? 'text-amber-600 dark:text-amber-400' 
                     : 'text-slate-400 dark:text-slate-500'
                 }`} 
               />
               <div className={`text-[8px] mt-1 font-semibold ${
-                panel.status === 'active' 
+                panel.status === 'active' && isCurrentlyDaytime
                   ? 'text-amber-700 dark:text-amber-300' 
                   : 'text-slate-500 dark:text-slate-400'
               }`}>
-                {panel.power > 0 ? `${panel.power.toFixed(1)}kW` : 'OFF'}
+                {panel.power > 0 && isCurrentlyDaytime ? `${panel.power.toFixed(1)}kW` : 'OFF'}
               </div>
             </div>
           </div>

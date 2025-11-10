@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
 import { 
   LayoutDashboard, 
   Cloud, 
@@ -16,10 +15,8 @@ import {
   BarChart3,
   Zap,
   Menu,
-  X,
-  Power
+  X
 } from 'lucide-react';
-import { API_BASE_URL_NO_SUFFIX } from '@/lib/api-client';
 
 interface NavItem {
   name: string;
@@ -31,7 +28,6 @@ interface NavItem {
 export default function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const { user, logout } = useAuth();
 
   const navItems: NavItem[] = [
     { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -173,39 +169,6 @@ export default function HamburgerMenu() {
               );
             })}
           </nav>
-
-          {/* User Profile & Logout */}
-          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
-            <div className="flex items-center gap-3 mb-4">
-              {user?.profile_picture ? (
-                <img
-                  src={user.profile_picture.startsWith('/') ? `${API_BASE_URL_NO_SUFFIX}${user.profile_picture}` : user.profile_picture}
-                  alt={user.username}
-                  className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-700 object-cover"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-pink-500 flex items-center justify-center border-2 border-slate-200 dark:border-slate-700">
-                  <span className="text-white text-sm font-bold">
-                    {user?.username?.[0]?.toUpperCase() || 'U'}
-                  </span>
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-slate-900 dark:text-slate-50 truncate">{user?.username || 'User'}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email || 'N/A'}</div>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                logout();
-              }}
-              className="flex items-center gap-3 px-4 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 w-full transition-colors"
-            >
-              <Power className="w-5 h-5 stroke-[1.5]" />
-              <span className="font-medium">Logout</span>
-            </button>
-          </div>
         </div>
       </aside>
     </>

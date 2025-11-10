@@ -178,7 +178,7 @@ function transformMicrogridForecastToLegacy(
 
 function DashboardContent() {
   const [currentTime, setCurrentTime] = useState<string>('');
-  const { user, isTrialActive, trialDaysRemaining, logout } = useAuth();
+  const { user } = useAuth();
   
   // Use the microgrid forecast hook
   const { 
@@ -488,13 +488,6 @@ function DashboardContent() {
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
-            {isTrialActive && (
-              <div className="mb-6 flex items-center gap-2 bg-amber-100 dark:bg-amber-900/20 px-4 py-2 rounded-lg border border-amber-200 dark:border-amber-800">
-                <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
-                  Trial: {trialDaysRemaining} days remaining
-                </span>
-              </div>
-            )}
             {isLoading && (
               <div className="text-center py-12">
                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
@@ -622,6 +615,8 @@ function DashboardContent() {
                   <SolarPanelsVisualization 
                     totalPower={systemStatus?.solar_generation_kw || forecastData?.current_power_output || 0}
                     panelCount={24}
+                    latitude={location.lat}
+                    longitude={location.lon}
                   />
                 </div>
 

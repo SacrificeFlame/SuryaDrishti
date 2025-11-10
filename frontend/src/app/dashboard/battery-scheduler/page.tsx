@@ -72,7 +72,7 @@ interface ForecastScheduleResponse {
 }
 
 function BatterySchedulerContent() {
-  const { user, isTrialActive, trialDaysRemaining, logout } = useAuth();
+  const { user } = useAuth();
   const [scheduleData, setScheduleData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
