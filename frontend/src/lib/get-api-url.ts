@@ -17,21 +17,12 @@ export function getApiUrl(): string {
   const envApiUrl = process.env.NEXT_PUBLIC_API_URL;
   
   // If NEXT_PUBLIC_API_URL is set and it's not localhost, use it
-  // BUT: Check if it's a valid URL (not the old broken one)
   if (envApiUrl && envApiUrl !== 'http://localhost:8000/api/v1') {
-    // Check if the URL contains the old broken backend domain
-    if (envApiUrl.includes('beauty-aryan-back-production.up.railway.app')) {
-      console.error('[API URL] ERROR: NEXT_PUBLIC_API_URL is set to a non-existent backend URL:', envApiUrl);
-      console.error('[API URL] This backend service does not exist. Please update NEXT_PUBLIC_API_URL in Railway.');
-      console.error('[API URL] Falling back to runtime detection...');
-      // Don't use the broken URL, fall through to runtime detection
-    } else {
-      // Valid URL, use it
-      if (typeof window !== 'undefined') {
-        console.log('[API URL] Using NEXT_PUBLIC_API_URL:', envApiUrl);
-      }
-      return envApiUrl;
+    // Valid URL, use it
+    if (typeof window !== 'undefined') {
+      console.log('[API URL] Using NEXT_PUBLIC_API_URL:', envApiUrl);
     }
+    return envApiUrl;
   }
   
   if (typeof window !== 'undefined') {
