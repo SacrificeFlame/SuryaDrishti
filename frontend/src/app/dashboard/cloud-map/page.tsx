@@ -144,29 +144,44 @@ function CloudMapContent() {
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
-            {loading || forecastLoading ? (
-              <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
-                  <p className="mt-4 text-slate-600 dark:text-slate-400">Loading cloud map data...</p>
+            {(() => {
+              if (loading || forecastLoading) {
+                return (
+                  <div className="flex items-center justify-center h-96">
+                    <div className="text-center">
+                      <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+                      <p className="mt-4 text-slate-600 dark:text-slate-400">Loading cloud map data...</p>
+                    </div>
+                  </div>
+                );
+              }
+              
+              if (forecastError) {
+                return (
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+                    <p className="text-red-800 dark:text-red-300">
+                      Error loading cloud map: {forecastError}
+                    </p>
+                  </div>
+                );
+              }
+              
+              const cloudData = forecastData?.cloud_data;
+              if (cloudData && forecastData) {
+                return (
+                  <CloudMovementMap
+                    cloudData={cloudData}
+                    location={forecastData.location}
+                  />
+                );
+              }
+              
+              return (
+                <div className="text-center py-12">
+                  <p className="text-slate-600 dark:text-slate-400">No cloud map data available</p>
                 </div>
-              </div>
-            ) : forecastError ? (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-                <p className="text-red-800 dark:text-red-300">
-                  Error loading cloud map: {forecastError}
-                </p>
-              </div>
-            ) : forecastData && forecastData.cloud_data ? (
-              <CloudMovementMap
-                cloudData={forecastData.cloud_data}
-                location={forecastData.location}
-              />
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-slate-600 dark:text-slate-400">No cloud map data available</p>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </main>
       </div>
