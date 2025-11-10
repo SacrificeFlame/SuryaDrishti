@@ -130,19 +130,30 @@ function getApiUrlRuntime(): string {
 
 // Fetch forecast and schedule data
 export async function getForecastSchedule(forecastHours: number = 12): Promise<ForecastScheduleResponse> {
-  const apiUrl = getApiUrlRuntime();
-  const response = await fetch(`${apiUrl}/forecast/schedule?forecast_hours=${forecastHours}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch forecast: ${response.status} ${response.statusText}`);
+  try {
+    const apiUrl = getApiUrlRuntime();
+    const response = await fetch(`${apiUrl}/forecast/schedule?forecast_hours=${forecastHours}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch forecast: ${response.status} ${response.statusText}`);
+    }
+    
+    return response.json();
+  } catch (error) {
+    // Handle network errors with improved error handling
+    const { isNetworkError, isDNSError, getNetworkErrorMessage, logNetworkError } = await import('@/utils/networkErrorHandler');
+    if (isNetworkError(error) || isDNSError(error)) {
+      const apiUrl = getApiUrlRuntime();
+      logNetworkError(error, apiUrl);
+      throw new Error(getNetworkErrorMessage(error, apiUrl));
+    }
+    throw error;
   }
-  
-  return response.json();
 }
 
 // Fetch NGBoost forecast (alternative)

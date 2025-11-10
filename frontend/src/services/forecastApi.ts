@@ -138,9 +138,12 @@ export async function getMicrogridForecast(
     if (err instanceof Error && err.name === 'AbortError') {
       throw new Error('Request timeout - the external API is taking too long to respond');
     }
-    // Handle network errors
-    if (err instanceof TypeError && err.message.includes('fetch')) {
-      throw new Error('Cannot connect to backend server. Make sure it\'s running on port 8000.');
+    // Handle network errors with improved error handling
+    const { isNetworkError, isDNSError, getNetworkErrorMessage, logNetworkError } = await import('@/utils/networkErrorHandler');
+    if (isNetworkError(err) || isDNSError(err)) {
+      const apiUrl = getAPI_BASE_URL();
+      logNetworkError(err, apiUrl);
+      throw new Error(getNetworkErrorMessage(err, apiUrl));
     }
     // Re-throw if it's already an Error, otherwise wrap it
     if (err instanceof Error) {

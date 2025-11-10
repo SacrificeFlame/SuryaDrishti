@@ -3,6 +3,23 @@
  * Provides consistent error handling for forecast API calls
  */
 
+import { isNetworkError, isDNSError, getNetworkErrorMessage, logNetworkError } from './networkErrorHandler';
+
+// Import getApiUrl - conditional import to avoid SSR issues
+// This will be undefined on server-side, which is fine
+let getApiUrlFn: (() => string) | undefined;
+
+if (typeof window !== 'undefined') {
+  try {
+    // Dynamic import to avoid SSR issues - but we'll call it synchronously in the function
+    // Since getApiUrl() itself is synchronous, we can import the module
+    const apiUrlModule = require('@/lib/get-api-url');
+    getApiUrlFn = apiUrlModule.getApiUrl;
+  } catch (e) {
+    // Ignore import errors - will fall back to undefined API URL
+  }
+}
+
 export interface ForecastError {
   message: string;
   type: 'network' | 'api' | 'validation' | 'unknown';
@@ -14,10 +31,23 @@ export interface ForecastError {
  * Handle forecast API errors and return structured error information
  */
 export function handleForecastError(error: unknown): ForecastError {
-  // Network errors (connection issues)
-  if (error instanceof TypeError && error.message.includes('fetch')) {
+  // Network errors (connection issues) - use improved network error handler
+  if (isNetworkError(error) || isDNSError(error)) {
+    // Get the API URL for better error messages
+    let apiUrl: string | undefined;
+    try {
+      if (getApiUrlFn && typeof window !== 'undefined') {
+        apiUrl = getApiUrlFn();
+      }
+    } catch (e) {
+      // Ignore errors when getting API URL
+    }
+    
+    // Log detailed error information
+    logNetworkError(error, apiUrl);
+    
     return {
-      message: 'Cannot connect to backend server. Make sure it\'s running on port 8000.',
+      message: getNetworkErrorMessage(error, apiUrl),
       type: 'network',
       retryable: true,
     };
@@ -136,6 +166,8 @@ export function getErrorStyle(error: ForecastError): {
       };
   }
 }
+
+
 
 
 

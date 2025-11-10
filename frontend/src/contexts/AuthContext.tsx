@@ -83,6 +83,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (fetchError.name === 'AbortError') {
           throw new Error('Request timeout: Backend server is not responding. Please check if the server is running.');
         }
+        // Handle network errors with improved error handling
+        const { isNetworkError, isDNSError, getNetworkErrorMessage, logNetworkError } = await import('@/utils/networkErrorHandler');
+        if (isNetworkError(fetchError) || isDNSError(fetchError)) {
+          logNetworkError(fetchError, apiUrl);
+          throw new Error(getNetworkErrorMessage(fetchError, apiUrl));
+        }
         throw new Error(`Network error: ${fetchError.message}`);
       }
 
@@ -134,6 +140,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearTimeout(userTimeoutId);
         if (fetchError.name === 'AbortError') {
           throw new Error('Request timeout: Failed to fetch user information.');
+        }
+        // Handle network errors with improved error handling
+        const { isNetworkError, isDNSError, getNetworkErrorMessage, logNetworkError } = await import('@/utils/networkErrorHandler');
+        if (isNetworkError(fetchError) || isDNSError(fetchError)) {
+          logNetworkError(fetchError, apiUrl);
+          throw new Error(getNetworkErrorMessage(fetchError, apiUrl));
         }
         throw new Error(`Network error: ${fetchError.message}`);
       }
