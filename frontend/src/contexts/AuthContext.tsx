@@ -68,7 +68,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       let response;
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+        // Use dynamic API URL detection to handle invalid backend URLs
+        const { getApiUrl } = await import('@/lib/get-api-url');
+        const apiUrl = getApiUrl();
+        console.log('[Login] Using API URL:', apiUrl);
         response = await fetch(`${apiUrl}/auth/login`, {
           method: 'POST',
           body: formData,
@@ -117,7 +120,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       let userResponse;
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+        // Use dynamic API URL detection
+        const { getApiUrl } = await import('@/lib/get-api-url');
+        const apiUrl = getApiUrl();
         userResponse = await fetch(`${apiUrl}/auth/me`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`,

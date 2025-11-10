@@ -61,8 +61,9 @@ export default function LoginPage() {
       console.error('[Login Page] Login error:', err);
       setLoading(false);
       if (err instanceof TypeError && err.message.includes('fetch')) {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
-        setError(`Cannot connect to server. Please make sure the backend is running on ${apiUrl}`);
+        const { getApiBaseUrl } = await import('@/lib/get-api-url');
+        const apiUrl = getApiBaseUrl();
+        setError(`Cannot connect to server. Please make sure the backend is running. Check browser console for API URL details.`);
       } else if (err instanceof Error) {
         setError(err.message);
       } else {

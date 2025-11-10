@@ -60,7 +60,8 @@ export default function RegisterPage() {
         username: formData.username,
       });
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      const { getApiUrl } = await import('@/lib/get-api-url');
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',
         headers: {

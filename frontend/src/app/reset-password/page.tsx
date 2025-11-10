@@ -48,7 +48,8 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      const { getApiUrl } = await import('@/lib/get-api-url');
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/auth/reset-password`, {
         method: 'POST',
         headers: {

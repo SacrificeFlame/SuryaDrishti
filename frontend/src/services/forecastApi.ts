@@ -9,7 +9,14 @@ import type {
   HybridForecastResponse,
 } from '@/types/forecast';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// Import dynamic API URL getter
+import { getApiUrl } from '@/lib/get-api-url';
+
+// Get API URL dynamically at runtime
+// This handles cases where NEXT_PUBLIC_API_URL might be set to an invalid URL
+function getAPI_BASE_URL(): string {
+  return getApiUrl();
+}
 
 /**
  * Get NGBoost forecast for a location
@@ -31,7 +38,8 @@ export async function getNGBoostForecast(
     retrain: (options.retrain || false).toString(),
   });
 
-  const response = await fetch(`${API_BASE_URL}/forecast/ngboost?${params}`);
+  const apiUrl = getAPI_BASE_URL();
+  const response = await fetch(`${apiUrl}/forecast/ngboost?${params}`);
   
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
@@ -61,7 +69,8 @@ export async function getHybridForecast(
     training_days: (options.trainingDays || 180).toString(),
   });
 
-  const response = await fetch(`${API_BASE_URL}/forecast/hybrid?${params}`);
+  const apiUrl = getAPI_BASE_URL();
+  const response = await fetch(`${apiUrl}/forecast/hybrid?${params}`);
   
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
@@ -94,8 +103,9 @@ export async function getMicrogridForecast(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 50000); // 50 second timeout
     
+    const apiUrl = getAPI_BASE_URL();
     const response = await fetch(
-      `${API_BASE_URL}/forecast/microgrid/${microgridId}?${params}`,
+      `${apiUrl}/forecast/microgrid/${microgridId}?${params}`,
       {
         headers: {
           'Content-Type': 'application/json',

@@ -1,13 +1,28 @@
-// Get API URL from environment variable
-// In production (Railway), this MUST be set to your backend's public URL
-// Example: https://your-backend.railway.app/api/v1
-// 
-// IMPORTANT: For Railway deployment, set NEXT_PUBLIC_API_URL environment variable
-// in Railway frontend service to your backend's Railway URL
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// Get API URL dynamically at runtime
+// This allows the backend URL to be detected based on the current domain
+import { getApiUrl, getApiBaseUrl } from './get-api-url';
+
+// Get API URL - this will be determined at runtime
+// For client-side code, this will detect the backend URL based on current domain
+// For server-side code, this will use NEXT_PUBLIC_API_URL or fallback to localhost
+export function getAPI_BASE_URL(): string {
+  return getApiUrl();
+}
+
+// Export as constant for backward compatibility, but it's actually a function call
+// Note: This will be evaluated at module load time, so for client-side it uses runtime detection
+export const API_BASE_URL = typeof window !== 'undefined' 
+  ? getApiUrl() 
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1');
 
 // Get base URL without /api/v1 suffix (for profile pictures, etc.)
-export const API_BASE_URL_NO_SUFFIX = API_BASE_URL.replace('/api/v1', '');
+export function getAPI_BASE_URL_NO_SUFFIX(): string {
+  return getApiBaseUrl();
+}
+
+export const API_BASE_URL_NO_SUFFIX = typeof window !== 'undefined'
+  ? getApiBaseUrl()
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '');
 
 // Log API URL in development to help with debugging
 if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
@@ -105,9 +120,18 @@ export interface MicrogridInfo {
   created_at: string;
 }
 
+// Helper function to get API URL at runtime (for client-side calls)
+function getApiUrlRuntime(): string {
+  if (typeof window !== 'undefined') {
+    return getApiUrl();
+  }
+  return API_BASE_URL;
+}
+
 // Fetch forecast and schedule data
 export async function getForecastSchedule(forecastHours: number = 12): Promise<ForecastScheduleResponse> {
-  const response = await fetch(`${API_BASE_URL}/forecast/schedule?forecast_hours=${forecastHours}`, {
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/forecast/schedule?forecast_hours=${forecastHours}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -127,13 +151,14 @@ export async function getNGBoostForecast(
   lon: number,
   horizonHours: number = 24
 ): Promise<any> {
+  const apiUrl = getApiUrlRuntime();
   const params = new URLSearchParams({
     lat: lat.toString(),
     lon: lon.toString(),
     horizon_hours: horizonHours.toString(),
   });
   
-  const response = await fetch(`${API_BASE_URL}/forecast/ngboost?${params}`);
+  const response = await fetch(`${apiUrl}/forecast/ngboost?${params}`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch NGBoost forecast: ${response.status}`);
@@ -144,7 +169,8 @@ export async function getNGBoostForecast(
 
 // Get system status
 export async function getSystemStatus(microgridId: string): Promise<SystemStatusResponse> {
-  const response = await fetch(`${API_BASE_URL}/microgrid/${microgridId}/status`);
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/microgrid/${microgridId}/status`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch system status: ${response.status}`);
@@ -155,7 +181,8 @@ export async function getSystemStatus(microgridId: string): Promise<SystemStatus
 
 // Get alerts
 export async function getAlerts(microgridId: string, limit: number = 20): Promise<AlertResponse[]> {
-  const response = await fetch(`${API_BASE_URL}/alerts/${microgridId}?limit=${limit}`);
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/alerts/${microgridId}?limit=${limit}`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch alerts: ${response.status}`);
@@ -166,7 +193,8 @@ export async function getAlerts(microgridId: string, limit: number = 20): Promis
 
 // Get latest sensor reading
 export async function getLatestSensorReading(microgridId: string): Promise<SensorReadingResponse> {
-  const response = await fetch(`${API_BASE_URL}/sensors/${microgridId}/latest`);
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/sensors/${microgridId}/latest`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch sensor reading: ${response.status}`);
@@ -177,7 +205,8 @@ export async function getLatestSensorReading(microgridId: string): Promise<Senso
 
 // Get sensor history
 export async function getSensorHistory(microgridId: string, limit: number = 100): Promise<SensorReadingResponse[]> {
-  const response = await fetch(`${API_BASE_URL}/sensors/${microgridId}/history?limit=${limit}`);
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/sensors/${microgridId}/history?limit=${limit}`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch sensor history: ${response.status}`);
@@ -188,7 +217,8 @@ export async function getSensorHistory(microgridId: string, limit: number = 100)
 
 // Get microgrid info
 export async function getMicrogridInfo(microgridId: string): Promise<MicrogridInfo> {
-  const response = await fetch(`${API_BASE_URL}/microgrid/${microgridId}`);
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/microgrid/${microgridId}`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch microgrid info: ${response.status}`);
@@ -232,7 +262,8 @@ export interface DeviceUpdate {
 }
 
 export async function getDevices(microgridId: string, activeOnly: boolean = false): Promise<Device[]> {
-  const response = await fetch(`${API_BASE_URL}/microgrid/${microgridId}/devices?active_only=${activeOnly}`);
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/microgrid/${microgridId}/devices?active_only=${activeOnly}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch devices: ${response.status}`);
   }
@@ -240,7 +271,8 @@ export async function getDevices(microgridId: string, activeOnly: boolean = fals
 }
 
 export async function getDevice(microgridId: string, deviceId: number): Promise<Device> {
-  const response = await fetch(`${API_BASE_URL}/microgrid/${microgridId}/devices/${deviceId}`);
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/microgrid/${microgridId}/devices/${deviceId}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch device: ${response.status}`);
   }
@@ -248,7 +280,8 @@ export async function getDevice(microgridId: string, deviceId: number): Promise<
 }
 
 export async function createDevice(microgridId: string, device: DeviceCreate): Promise<Device> {
-  const response = await fetch(`${API_BASE_URL}/microgrid/${microgridId}/devices`, {
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/microgrid/${microgridId}/devices`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(device),
@@ -260,7 +293,8 @@ export async function createDevice(microgridId: string, device: DeviceCreate): P
 }
 
 export async function updateDevice(microgridId: string, deviceId: number, device: DeviceUpdate): Promise<Device> {
-  const response = await fetch(`${API_BASE_URL}/microgrid/${microgridId}/devices/${deviceId}`, {
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/microgrid/${microgridId}/devices/${deviceId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(device),
@@ -272,7 +306,8 @@ export async function updateDevice(microgridId: string, deviceId: number, device
 }
 
 export async function deleteDevice(microgridId: string, deviceId: number): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/microgrid/${microgridId}/devices/${deviceId}`, {
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/microgrid/${microgridId}/devices/${deviceId}`, {
     method: 'DELETE',
   });
   if (!response.ok) {
@@ -339,7 +374,8 @@ export interface ScheduleGenerateRequest {
 }
 
 export async function generateSchedule(microgridId: string, request: ScheduleGenerateRequest = {}): Promise<Schedule> {
-  const response = await fetch(`${API_BASE_URL}/microgrid/${microgridId}/schedules/generate`, {
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/microgrid/${microgridId}/schedules/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
@@ -351,9 +387,10 @@ export async function generateSchedule(microgridId: string, request: ScheduleGen
 }
 
 export async function getSchedules(microgridId: string, date?: string, limit: number = 10): Promise<Schedule[]> {
+  const apiUrl = getApiUrlRuntime();
   const params = new URLSearchParams({ limit: limit.toString() });
   if (date) params.append('date', date);
-  const response = await fetch(`${API_BASE_URL}/microgrid/${microgridId}/schedules?${params}`);
+  const response = await fetch(`${apiUrl}/microgrid/${microgridId}/schedules?${params}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch schedules: ${response.status}`);
   }
@@ -361,7 +398,8 @@ export async function getSchedules(microgridId: string, date?: string, limit: nu
 }
 
 export async function getSchedule(microgridId: string, scheduleId: number): Promise<Schedule> {
-  const response = await fetch(`${API_BASE_URL}/microgrid/${microgridId}/schedules/${scheduleId}`);
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/microgrid/${microgridId}/schedules/${scheduleId}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch schedule: ${response.status}`);
   }
@@ -414,7 +452,8 @@ export interface SystemConfigurationUpdate {
 }
 
 export async function getConfiguration(microgridId: string): Promise<SystemConfiguration> {
-  const response = await fetch(`${API_BASE_URL}/microgrid/${microgridId}/configuration`);
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/microgrid/${microgridId}/configuration`);
   if (!response.ok) {
     throw new Error(`Failed to fetch configuration: ${response.status}`);
   }
@@ -422,7 +461,8 @@ export async function getConfiguration(microgridId: string): Promise<SystemConfi
 }
 
 export async function updateConfiguration(microgridId: string, config: SystemConfigurationUpdate): Promise<SystemConfiguration> {
-  const response = await fetch(`${API_BASE_URL}/microgrid/${microgridId}/configuration`, {
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/microgrid/${microgridId}/configuration`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(config),
@@ -435,7 +475,8 @@ export async function updateConfiguration(microgridId: string, config: SystemCon
 
 // Notification APIs
 export async function getNotificationPreferences(microgridId: string): Promise<NotificationPreferences> {
-  const response = await fetch(`${API_BASE_URL}/notifications/preferences/${microgridId}`);
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/notifications/preferences/${microgridId}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch notification preferences: ${response.status}`);
   }
@@ -446,7 +487,8 @@ export async function updateNotificationPreferences(
   microgridId: string,
   preferences: NotificationPreferenceRequest
 ): Promise<NotificationPreferences> {
-  const response = await fetch(`${API_BASE_URL}/notifications/preferences/${microgridId}`, {
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/notifications/preferences/${microgridId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(preferences),
@@ -458,7 +500,8 @@ export async function updateNotificationPreferences(
 }
 
 export async function sendTestNotification(microgridId: string): Promise<{ status: string }> {
-  const response = await fetch(`${API_BASE_URL}/notifications/send-test/${microgridId}`, {
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/notifications/send-test/${microgridId}`, {
     method: 'POST',
   });
   if (!response.ok) {
@@ -469,7 +512,8 @@ export async function sendTestNotification(microgridId: string): Promise<{ statu
 
 // Alert APIs
 export async function acknowledgeAlert(alertId: number, acknowledged: boolean = true): Promise<{ status: string; alert_id: number; acknowledged: boolean }> {
-  const response = await fetch(`${API_BASE_URL}/alerts/${alertId}/acknowledge`, {
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/alerts/${alertId}/acknowledge`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ acknowledged }),
@@ -486,8 +530,9 @@ export async function getEnergyLossReport(
   startDate: string,
   endDate: string
 ): Promise<EnergyLossReport> {
+  const apiUrl = getApiUrlRuntime();
   const response = await fetch(
-    `${API_BASE_URL}/reports/energy-loss/${microgridId}?start_date=${startDate}&end_date=${endDate}`
+    `${apiUrl}/reports/energy-loss/${microgridId}?start_date=${startDate}&end_date=${endDate}`
   );
   if (!response.ok) {
     throw new Error(`Failed to fetch energy loss report: ${response.status}`);
@@ -499,7 +544,8 @@ export async function getPerformanceReport(
   microgridId: string,
   days: number = 7
 ): Promise<PerformanceReport> {
-  const response = await fetch(`${API_BASE_URL}/reports/performance/${microgridId}?days=${days}`);
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/reports/performance/${microgridId}?days=${days}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch performance report: ${response.status}`);
   }

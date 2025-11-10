@@ -94,7 +94,8 @@ export default function ProfilePictureUpload({
     if (currentPicture) {
       // If it's a relative path, prepend the API base URL
       if (currentPicture.startsWith('/')) {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+        const { getApiBaseUrl } = await import('@/lib/get-api-url');
+        const apiUrl = getApiBaseUrl();
         return `${apiUrl}${currentPicture}`;
       }
       return currentPicture;
