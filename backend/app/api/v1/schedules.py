@@ -322,7 +322,19 @@ async def generate_schedule(
     )
     
     # Determine schedule date
-    schedule_date = request.date or datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    if request.date:
+        # Parse date string (can be YYYY-MM-DD or full ISO datetime)
+        try:
+            if len(request.date) == 10:  # YYYY-MM-DD format
+                schedule_date = datetime.strptime(request.date, "%Y-%m-%d")
+            else:
+                schedule_date = parser.parse(request.date)
+                schedule_date = schedule_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        except Exception as e:
+            logger.warning(f"Failed to parse date '{request.date}': {e}, using today")
+            schedule_date = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    else:
+        schedule_date = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     
     # Check if schedule already exists for this date
     existing_schedule = db.query(Schedule).filter(

@@ -179,7 +179,7 @@ class ScheduleResponse(BaseModel):
     updated_at: datetime
 
 class ScheduleGenerateRequest(BaseModel):
-    date: Optional[datetime] = Field(None, description="Date for schedule (defaults to today)")
+    date: Optional[str] = Field(None, description="Date for schedule in ISO format (YYYY-MM-DD) or ISO datetime (defaults to today)")
     use_forecast: bool = Field(True, description="Use solar forecast data")
     optimization_mode: Optional[str] = Field(None, description="Override optimization mode")
 
