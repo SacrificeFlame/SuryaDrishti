@@ -224,14 +224,16 @@ docker-compose up -d
 
 ### Production Checklist
 
-- [ ] Set strong `SECRET_KEY` in environment
-- [ ] Configure production database (PostgreSQL/TimescaleDB)
-- [ ] Set up Redis for Celery
-- [ ] Configure CORS for production domains
+- [x] Set strong `SECRET_KEY` in environment (auto-generated in production)
+- [x] Configure production database (PostgreSQL/TimescaleDB)
+- [x] Set up Redis for Celery
+- [x] Configure CORS for production domains
 - [ ] Obtain INSAT/MOSDAC API keys for real satellite data
-- [ ] Set up monitoring (Prometheus + Grafana)
-- [ ] Configure SSL/TLS
-- [ ] Set up automated backups
+- [x] Set up monitoring (Prometheus + Grafana)
+- [x] Configure SSL/TLS
+- [x] Set up automated backups
+
+See [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) for detailed setup instructions.
 
 ## Roadmap
 
@@ -239,14 +241,14 @@ docker-compose up -d
 - [x] ML models (Cloud segmentation + Irradiance forecasting)
 - [x] SQLite database
 - [x] Sample data generation
-- [ ] Next.js dashboard with interactive maps
-- [ ] WebSocket real-time updates
-- [ ] Celery background tasks
+- [x] Next.js dashboard with interactive maps
+- [x] WebSocket real-time updates
+- [x] Celery background tasks
 - [ ] Real satellite data integration (INSAT-3D/GOES-16)
 - [ ] Mobile app (React Native)
-- [ ] Historical accuracy tracking
+- [x] Historical accuracy tracking
 - [ ] Multi-microgrid optimization
-- [ ] Production deployment guides
+- [x] Production deployment guides
 
 ## Contributing
 

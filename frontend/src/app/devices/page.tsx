@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import HamburgerMenu from '@/components/dashboard/HamburgerMenu';
 import { getDevices, createDevice, updateDevice, deleteDevice, Device, DeviceCreate } from '@/lib/api-client';
-import { Plus, Edit, Trash2, Power, Clock, Star, Settings } from 'lucide-react';
+import { Plus, Edit, Trash2, Power, Clock, Star, Settings, ArrowLeft, Save } from 'lucide-react';
 
 const DEFAULT_MICROGRID_ID = 'microgrid_001';
 
@@ -111,29 +113,50 @@ function DevicesPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Device Management</h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-2">
-              Manage your devices and their power consumption settings
-            </p>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
+      <HamburgerMenu />
+      
+      <div className="flex-1 flex flex-col lg:ml-0">
+        {/* Header */}
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30">
+          <div className="px-4 sm:px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-4">
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span className="text-sm font-medium hidden sm:inline">Back to Dashboard</span>
+                </Link>
+                <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block" />
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-50">Device Management</h1>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                    Manage your devices and their power consumption settings
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setEditingDevice(null);
+                  resetForm();
+                  setShowModal(true);
+                }}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm sm:text-base"
+              >
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Add Device</span>
+                <span className="sm:hidden">Add</span>
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => {
-              setEditingDevice(null);
-              resetForm();
-              setShowModal(true);
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            Add Device
-          </button>
-        </div>
+        </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {devices.map((device) => (
             <div
               key={device.id}
@@ -197,13 +220,15 @@ function DevicesPageContent() {
               </div>
             </div>
           ))}
-        </div>
+            </div>
 
-        {devices.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-slate-600 dark:text-slate-400 mb-4">No devices found. Add your first device to get started.</p>
+            {devices.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-slate-600 dark:text-slate-400 mb-4">No devices found. Add your first device to get started.</p>
+              </div>
+            )}
           </div>
-        )}
+        </main>
 
         {/* Modal */}
         {showModal && (
@@ -330,11 +355,12 @@ function DevicesPageContent() {
                   </div>
                 </div>
 
-                <div className="flex gap-4 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+                    className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center justify-center gap-2"
                   >
+                    <Save className="w-4 h-4" />
                     {editingDevice ? 'Update Device' : 'Create Device'}
                   </button>
                   <button
@@ -348,6 +374,14 @@ function DevicesPageContent() {
                   >
                     Cancel
                   </button>
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span className="hidden sm:inline">Save & Back</span>
+                    <span className="sm:hidden">Back</span>
+                  </Link>
                 </div>
               </form>
             </div>

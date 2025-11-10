@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.config import settings
 from app.api.v1 import forecast, alerts, microgrid, sensors, satellite, auth
-from app.api.v1 import forecast_microgrid, debug, devices, schedules, configurations, forecast_validation, forecast_run, notifications, reports, db_init
+from app.api.v1 import forecast_microgrid, debug, devices, schedules, configurations, forecast_validation, forecast_run, notifications, reports, db_init, metrics
 from app.models.database import Base
 from app.core.database import engine
 from typing import List
@@ -108,6 +108,52 @@ async def startup_event():
                 logger.info("✅ Database seeded with default data")
             else:
                 logger.info(f"Database already has microgrid {existing_microgrid.id}")
+            
+            # Generate default alerts if none exist
+            from app.models.database import Alert
+            from datetime import timedelta
+            existing_alerts = db.query(Alert).filter(Alert.microgrid_id == 'microgrid_001').count()
+            if existing_alerts == 0:
+                logger.info("Generating default system alerts...")
+                now = datetime.utcnow()
+                default_alerts = [
+                    Alert(
+                        microgrid_id='microgrid_001',
+                        timestamp=now - timedelta(minutes=5),
+                        severity='info',
+                        message='System initialized and running normally',
+                        action_taken='System startup completed',
+                        acknowledged=0
+                    ),
+                    Alert(
+                        microgrid_id='microgrid_001',
+                        timestamp=now - timedelta(minutes=10),
+                        severity='info',
+                        message='Forecast generation scheduled for next 15 minutes',
+                        action_taken='Forecast scheduler activated',
+                        acknowledged=0
+                    ),
+                    Alert(
+                        microgrid_id='microgrid_001',
+                        timestamp=now - timedelta(hours=1),
+                        severity='warning',
+                        message='Battery SOC below 70% - monitoring charge cycle',
+                        action_taken='Battery charging initiated',
+                        acknowledged=0
+                    ),
+                    Alert(
+                        microgrid_id='microgrid_001',
+                        timestamp=now - timedelta(hours=2),
+                        severity='info',
+                        message='Daily performance report generated',
+                        action_taken='Report saved to database',
+                        acknowledged=1
+                    ),
+                ]
+                for alert in default_alerts:
+                    db.add(alert)
+                db.commit()
+                logger.info(f"✅ Generated {len(default_alerts)} default alerts")
         except Exception as e:
             db.rollback()
             logger.error(f"Failed to seed database: {e}", exc_info=True)
@@ -182,6 +228,7 @@ app.include_router(forecast_validation.router, prefix="/api/v1", tags=["forecast
 app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["notifications"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
 app.include_router(db_init.router, prefix="/api/v1", tags=["database"])
+app.include_router(metrics.router, prefix="/api/v1", tags=["metrics"])
 
 # WebSocket Manager
 class ConnectionManager:

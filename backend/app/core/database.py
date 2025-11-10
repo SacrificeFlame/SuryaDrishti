@@ -4,26 +4,25 @@ from typing import Generator
 from .config import settings
 import os
 
-# Get DATABASE_URL from config (which handles Railway PostgreSQL URLs)
-# Railway provides DATABASE_URL as postgres:// but SQLAlchemy needs postgresql://
-DATABASE_URL = os.getenv("DATABASE_URL", settings.DATABASE_URL)
-# Convert Railway's postgres:// to postgresql:// for SQLAlchemy compatibility
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+# Use processed database URL from config (handles Railway PostgreSQL URLs and SSL)
+DATABASE_URL = settings.database_url_processed
 
-# Create engine
+# Create engine with appropriate configuration
 if DATABASE_URL.startswith('sqlite'):
     engine = create_engine(
         DATABASE_URL,
-        connect_args={"check_same_thread": False}
+        connect_args={"check_same_thread": False},
+        echo=settings.DEBUG
     )
 else:
-    # PostgreSQL (Railway) - use connection pooling
+    # PostgreSQL/TimescaleDB - use connection pooling for production
     engine = create_engine(
         DATABASE_URL,
-        pool_pre_ping=True,
-        pool_size=5,
-        max_overflow=10
+        pool_pre_ping=True,  # Verify connections before using
+        pool_size=settings.DB_POOL_SIZE,
+        max_overflow=settings.DB_MAX_OVERFLOW,
+        pool_recycle=3600,  # Recycle connections after 1 hour
+        echo=settings.DEBUG
     )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
