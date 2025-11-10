@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Camera, X, Loader2 } from 'lucide-react';
+import { getApiBaseUrl } from '@/lib/get-api-url';
 
 interface ProfilePictureUploadProps {
   currentPicture?: string | null;
@@ -89,21 +90,14 @@ export default function ProfilePictureUpload({
     }
   };
 
-  // Import getApiBaseUrl at the top level
+  // Get image URL - handle relative paths by prepending API base URL
   const getImageUrl = () => {
     if (preview) return preview;
     if (currentPicture) {
       // If it's a relative path, prepend the API base URL
       if (currentPicture.startsWith('/')) {
-        // Use dynamic import synchronously in client-side context
-        try {
-          const { getApiBaseUrl } = require('@/lib/get-api-url');
-          const apiUrl = getApiBaseUrl();
-          return `${apiUrl}${currentPicture}`;
-        } catch {
-          // Fallback if import fails
-          return currentPicture;
-        }
+        const apiUrl = getApiBaseUrl();
+        return `${apiUrl}${currentPicture}`;
       }
       return currentPicture;
     }
