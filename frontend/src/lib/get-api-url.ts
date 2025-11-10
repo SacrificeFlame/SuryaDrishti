@@ -46,18 +46,23 @@ export function getApiUrl(): string {
       // Pattern 2: Backend might be on a different Railway service (needs NEXT_PUBLIC_API_URL)
       // Pattern 3: Backend might be on the same domain with /api path
       
-      // For now, we need to know the actual backend Railway URL
-      // The best solution is to set NEXT_PUBLIC_API_URL in Railway environment variables
       console.error('[API URL] ERROR: Cannot determine backend URL for custom domain.');
       console.error('[API URL] Current hostname:', hostname);
       console.error('[API URL] NEXT_PUBLIC_API_URL is not set or is invalid.');
       console.error('[API URL] SOLUTION: Set NEXT_PUBLIC_API_URL in Railway frontend service environment variables.');
-      console.error('[API URL] Example: https://your-backend-service.railway.app/api/v1');
+      console.error('[API URL] Step 1: Go to Railway Dashboard → Backend Service → Settings → Networking');
+      console.error('[API URL] Step 2: Copy your backend Railway domain (e.g., your-backend-service.up.railway.app)');
+      console.error('[API URL] Step 3: Go to Frontend Service → Variables → Add NEXT_PUBLIC_API_URL');
+      console.error('[API URL] Step 4: Set value to: https://your-backend-service.up.railway.app/api/v1');
+      console.error('[API URL] Step 5: Redeploy frontend service');
       
-      // Try to construct a potential backend URL (this is a guess and likely won't work)
-      // The user MUST set NEXT_PUBLIC_API_URL in Railway
-      const potentialBackendUrl = `${protocol}//api.${hostname}/api/v1`;
-      console.warn('[API URL] Attempting fallback URL (this may not work):', potentialBackendUrl);
+      // Try to construct a potential backend URL
+      // Remove 'www.' prefix if present to get base domain
+      const baseDomain = hostname.replace(/^www\./, '');
+      const potentialBackendUrl = `${protocol}//api.${baseDomain}/api/v1`;
+      console.warn('[API URL] Attempting fallback URL (this may not work if backend is not on api.suryadrishti.in):', potentialBackendUrl);
+      console.warn('[API URL] NOTE: This fallback will only work if you have set up api.suryadrishti.in as a custom domain for your backend.');
+      console.warn('[API URL] RECOMMENDED: Set NEXT_PUBLIC_API_URL to your Railway backend URL instead.');
       return potentialBackendUrl;
     }
     
