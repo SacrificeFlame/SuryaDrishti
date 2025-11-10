@@ -12,12 +12,12 @@ SuryaDrishti is a real-time solar forecasting system that predicts solar power f
 
 ### Key Features
 
-- ⚡ **Real-time Forecasting** - 60-minute ahead predictions with 5-minute resolution
-- 🌥️ **Cloud Tracking** - AI-powered cloud detection and motion tracking
-- 📊 **Probabilistic Forecasts** - P10/P50/P90 quantile predictions
-- 🚨 **Smart Alerts** - Automatic alerts for power drops
-- 🔋 **Battery Scheduling** - Optimized charging/discharging schedules
-- 📈 **Interactive Dashboard** - Real-time monitoring and visualization
+- **Real-time Forecasting** - 60-minute ahead predictions with 5-minute resolution
+- **Cloud Tracking** - AI-powered cloud detection and motion tracking
+- **Probabilistic Forecasts** - P10/P50/P90 quantile predictions
+- **Smart Alerts** - Automatic alerts for power drops
+- **Battery Scheduling** - Optimized charging/discharging schedules
+- **Interactive Dashboard** - Real-time monitoring and visualization
 
 ## Tech Stack
 
@@ -112,13 +112,13 @@ suryadrishti/
 
 ## Production Features
 
-- ✅ Strong SECRET_KEY generation
-- ✅ PostgreSQL/TimescaleDB support
-- ✅ Redis for Celery
-- ✅ CORS configuration
-- ✅ Monitoring (Prometheus + Grafana)
-- ✅ SSL/TLS support
-- ✅ Automated backups
+- Strong SECRET_KEY generation
+- PostgreSQL/TimescaleDB support
+- Redis for Celery
+- CORS configuration
+- Monitoring (Prometheus + Grafana)
+- SSL/TLS support
+- Automated backups
 
 ## Roadmap
 
@@ -127,13 +127,7 @@ suryadrishti/
 - [x] Next.js dashboard
 - [x] WebSocket real-time updates
 - [x] Battery scheduling
-- [ ] Real satellite data integration
-- [ ] Mobile app
-- [ ] Multi-microgrid optimization
-
-## Contributing
-
-Contributions welcome! Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) first.
+- [x] Real satellite data integration
 
 ## License
 
@@ -141,9 +135,6 @@ MIT License - see [LICENSE](LICENSE) file
 
 ## Contact
 
-- **Website:** https://suryadrishti.example.com
-- **Email:** support@suryadrishti.com
+- **Website:** suryadrishti.in
 
 ---
-
-**Built with ❤️ for sustainable energy access in rural India**
