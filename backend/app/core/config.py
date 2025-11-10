@@ -22,6 +22,9 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3001",
+        # Production domains
+        "https://www.suryadrishti.in",
+        "https://suryadrishti.in",
         # Add production domains from environment
         *[origin.strip() for origin in os.getenv("ALLOWED_ORIGINS", "").split(",") if origin.strip()],
         # Railway frontend URLs (will be set in production)

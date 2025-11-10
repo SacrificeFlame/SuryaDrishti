@@ -93,9 +93,9 @@ export function getApiUrl(): string {
       console.error('❌ Please set NEXT_PUBLIC_API_URL to your actual Railway backend URL and redeploy.');
       console.error('');
       
-      // Return a URL that will fail immediately so user knows to fix it
-      // Using a clearly invalid URL pattern so it's obvious it's a configuration issue
-      return 'https://BACKEND-URL-NOT-CONFIGURED.railway.app/api/v1';
+      // Return a URL that will fail immediately with DNS error (not CORS)
+      // Using a non-existent domain that will definitely fail DNS resolution
+      return 'https://backend-url-not-configured-invalid-domain-12345.invalid/api/v1';
     }
     
     // If we're on a Railway domain (frontend)
@@ -115,8 +115,9 @@ export function getApiUrl(): string {
       console.error('');
       console.error('═══════════════════════════════════════════════════════════');
       
-      // Return a clearly invalid URL so user knows to configure it
-      return 'https://BACKEND-URL-NOT-CONFIGURED.railway.app/api/v1';
+      // Return a URL that will fail immediately with DNS error (not CORS)
+      // Using a non-existent domain that will definitely fail DNS resolution
+      return 'https://backend-url-not-configured-invalid-domain-12345.invalid/api/v1';
     }
     
     // Localhost development
