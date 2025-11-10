@@ -157,7 +157,7 @@ function CloudMapContent() {
                   Error loading cloud map: {forecastError}
                 </p>
               </div>
-            ) : forecastData ? (
+            ) : forecastData && forecastData.cloud_data ? (
               <CloudMovementMap
                 cloudData={forecastData.cloud_data}
                 location={forecastData.location}
