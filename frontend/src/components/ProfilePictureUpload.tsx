@@ -89,14 +89,21 @@ export default function ProfilePictureUpload({
     }
   };
 
+  // Import getApiBaseUrl at the top level
   const getImageUrl = () => {
     if (preview) return preview;
     if (currentPicture) {
       // If it's a relative path, prepend the API base URL
       if (currentPicture.startsWith('/')) {
-        const { getApiBaseUrl } = await import('@/lib/get-api-url');
-        const apiUrl = getApiBaseUrl();
-        return `${apiUrl}${currentPicture}`;
+        // Use dynamic import synchronously in client-side context
+        try {
+          const { getApiBaseUrl } = require('@/lib/get-api-url');
+          const apiUrl = getApiBaseUrl();
+          return `${apiUrl}${currentPicture}`;
+        } catch {
+          // Fallback if import fails
+          return currentPicture;
+        }
       }
       return currentPicture;
     }
