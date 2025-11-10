@@ -67,10 +67,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
       let response;
+      let apiUrl: string | undefined;
       try {
         // Use dynamic API URL detection to handle invalid backend URLs
         const { getApiUrl } = await import('@/lib/get-api-url');
-        const apiUrl = getApiUrl();
+        apiUrl = getApiUrl();
         console.log('[Login] Using API URL:', apiUrl);
         response = await fetch(`${apiUrl}/auth/login`, {
           method: 'POST',
@@ -86,6 +87,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Handle network errors with improved error handling
         const { isNetworkError, isDNSError, getNetworkErrorMessage, logNetworkError } = await import('@/utils/networkErrorHandler');
         if (isNetworkError(fetchError) || isDNSError(fetchError)) {
+          // Get API URL if not already available
+          if (!apiUrl) {
+            try {
+              const { getApiUrl } = await import('@/lib/get-api-url');
+              apiUrl = getApiUrl();
+            } catch (e) {
+              // Ignore if we can't get API URL
+            }
+          }
           logNetworkError(fetchError, apiUrl);
           throw new Error(getNetworkErrorMessage(fetchError, apiUrl));
         }
@@ -125,11 +135,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userTimeoutId = setTimeout(() => userController.abort(), 10000);
       
       let userResponse;
+      let userApiUrl: string | undefined;
       try {
         // Use dynamic API URL detection
         const { getApiUrl } = await import('@/lib/get-api-url');
-        const apiUrl = getApiUrl();
-        userResponse = await fetch(`${apiUrl}/auth/me`, {
+        userApiUrl = getApiUrl();
+        userResponse = await fetch(`${userApiUrl}/auth/me`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
           },
@@ -144,8 +155,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Handle network errors with improved error handling
         const { isNetworkError, isDNSError, getNetworkErrorMessage, logNetworkError } = await import('@/utils/networkErrorHandler');
         if (isNetworkError(fetchError) || isDNSError(fetchError)) {
-          logNetworkError(fetchError, apiUrl);
-          throw new Error(getNetworkErrorMessage(fetchError, apiUrl));
+          // Get API URL if not already available
+          if (!userApiUrl) {
+            try {
+              const { getApiUrl } = await import('@/lib/get-api-url');
+              userApiUrl = getApiUrl();
+            } catch (e) {
+              // Ignore if we can't get API URL
+            }
+          }
+          logNetworkError(fetchError, userApiUrl);
+          throw new Error(getNetworkErrorMessage(fetchError, userApiUrl));
         }
         throw new Error(`Network error: ${fetchError.message}`);
       }
