@@ -1,13 +1,39 @@
 'use client';
 
+import { useState } from 'react';
 import { Alert } from '@/types/forecast';
 import { AlertCircle, AlertTriangle, Info, CheckCircle2, Bell } from 'lucide-react';
+import { acknowledgeAlert } from '@/lib/api-client';
 
 interface AlertsPanelProps {
   alerts: Alert[];
+  onAlertAcknowledged?: (alertId: number) => void;
 }
 
-export default function AlertsPanel({ alerts }: AlertsPanelProps) {
+export default function AlertsPanel({ alerts, onAlertAcknowledged }: AlertsPanelProps) {
+  const [acknowledging, setAcknowledging] = useState<Set<number>>(new Set());
+
+  const handleAcknowledge = async (alertId: number) => {
+    if (acknowledging.has(alertId)) return;
+    
+    setAcknowledging(prev => new Set(prev).add(alertId));
+    try {
+      await acknowledgeAlert(alertId, true);
+      if (onAlertAcknowledged) {
+        onAlertAcknowledged(alertId);
+      }
+    } catch (error) {
+      console.error('Failed to acknowledge alert:', error);
+      alert('Failed to acknowledge alert. Please try again.');
+    } finally {
+      setAcknowledging(prev => {
+        const next = new Set(prev);
+        next.delete(alertId);
+        return next;
+      });
+    }
+  };
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical':
@@ -116,9 +142,20 @@ export default function AlertsPanel({ alerts }: AlertsPanelProps) {
                       )}
                     </div>
                   </div>
-                  <button className="text-xs px-3 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 transition text-slate-700 dark:text-slate-300">
-                    Acknowledge
-                  </button>
+                  {!alert.acknowledged && (
+                    <button
+                      onClick={() => handleAcknowledge(alert.id)}
+                      disabled={acknowledging.has(alert.id)}
+                      className="text-xs px-3 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 transition text-slate-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {acknowledging.has(alert.id) ? 'Acknowledging...' : 'Acknowledge'}
+                    </button>
+                  )}
+                  {alert.acknowledged && (
+                    <span className="text-xs px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                      Acknowledged
+                    </span>
+                  )}
                 </div>
               </div>
             );

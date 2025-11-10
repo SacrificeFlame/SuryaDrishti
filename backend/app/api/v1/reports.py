@@ -177,3 +177,7 @@ async def get_performance_report(
         logger.error(f"Error generating performance report: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
 
+
+
+
+

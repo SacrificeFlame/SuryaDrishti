@@ -149,3 +149,7 @@ class IrrigationAutomation:
             'battery_capacity_kwh': battery_capacity_kwh
         }
 
+
+
+
+

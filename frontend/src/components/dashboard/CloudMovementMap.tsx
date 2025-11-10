@@ -86,7 +86,7 @@ export default function CloudMovementMap({ cloudData, location }: CloudMovementM
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover">
-      <div className="flex justify-between iteimage.pngms-center mb-5">
+      <div className="flex justify-between items-center mb-5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700">
             <Satellite className="w-5 h-5 text-slate-600 dark:text-slate-400 stroke-[1.5]" />

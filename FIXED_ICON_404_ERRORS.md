@@ -96,3 +96,5 @@ After redeployment, check:
 
 **FIXED** - All missing icon files have been created and committed to the repository. The 404 errors should be resolved after Railway redeploys the frontend.
 
+
+

@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getEnergyLossReport, getPerformanceReport } from '@/lib/api-client';
 import type { EnergyLossReport, PerformanceReport } from '@/types/reports';
-import { ArrowLeft, TrendingDown, Activity, AlertTriangle, Battery, Zap, DollarSign, Leaf } from 'lucide-react';
+import { ArrowLeft, TrendingDown, Activity, AlertTriangle, Battery, Zap, DollarSign, Leaf, Download } from 'lucide-react';
 
 const DEFAULT_MICROGRID_ID = 'microgrid_001';
 
@@ -25,6 +25,53 @@ function ReportsContent() {
   useEffect(() => {
     loadReports();
   }, [dateRange.startDate, dateRange.endDate, days]);
+
+  const exportToCSV = (data: any, filename: string) => {
+    if (!data) return;
+    
+    // Convert data to CSV format
+    const headers: string[] = [];
+    const rows: any[] = [];
+    
+    if (filename.includes('energy-loss')) {
+      headers.push('Metric', 'Value');
+      rows.push(
+        ['Energy Saved (kWh)', data.metrics?.energy_saved_kwh || 0],
+        ['Prevented Outages', data.metrics?.prevented_outages || 0],
+        ['Battery Cycles Saved', data.metrics?.battery_cycles_saved || 0],
+        ['Forecast Accuracy (%)', data.metrics?.forecast_accuracy_percent || 0],
+        ['Total Alerts', data.summary?.total_alerts || 0],
+        ['Critical Alerts', data.summary?.critical_alerts || 0],
+        ['Actions Taken', data.summary?.actions_taken || 0],
+      );
+    } else if (filename.includes('performance')) {
+      headers.push('Metric', 'Value');
+      rows.push(
+        ['Forecasts Generated', data.metrics?.forecasts_generated || 0],
+        ['Sensor Readings', data.metrics?.sensor_readings || 0],
+        ['System Uptime (%)', data.metrics?.system_uptime_percent || 0],
+        ['Forecast Accuracy MAE', data.metrics?.forecast_accuracy_mae || 0],
+        ['Critical Alerts', data.alerts_by_severity?.critical || 0],
+        ['Warning Alerts', data.alerts_by_severity?.warning || 0],
+        ['Info Alerts', data.alerts_by_severity?.info || 0],
+      );
+    }
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map((cell: any) => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const loadReports = async () => {
     try {
@@ -142,9 +189,18 @@ function ReportsContent() {
         {/* Energy Loss Report */}
         {energyLossReport && (
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <TrendingDown className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Energy Loss Prevention Report</h2>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <TrendingDown className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Energy Loss Prevention Report</h2>
+              </div>
+              <button
+                onClick={() => exportToCSV(energyLossReport, 'energy-loss-report')}
+                className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -215,10 +271,19 @@ function ReportsContent() {
         {/* Performance Report */}
         {performanceReport && (
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Performance Report</h2>
-              <span className="text-sm text-slate-500 dark:text-slate-400">({performanceReport.period_days} days)</span>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">Performance Report</h2>
+                <span className="text-sm text-slate-500 dark:text-slate-400">({performanceReport.period_days} days)</span>
+              </div>
+              <button
+                onClick={() => exportToCSV(performanceReport, 'performance-report')}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">

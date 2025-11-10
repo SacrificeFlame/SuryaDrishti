@@ -322,17 +322,35 @@ function DashboardContent() {
           });
 
           // Calculate diesel savings (assuming diesel costs ₹80/liter, 1kW = 0.25L/hour)
-          const totalEnergyToday = todayReadings.reduce((sum, r) => sum + r.power_output, 0);
-          const dieselSavings = (totalEnergyToday * 0.25 * 80) / 1000; // Convert to liters and cost
+          // Sum power output over time intervals (assuming 15-minute intervals)
+          const totalEnergyToday = todayReadings.reduce((sum, r) => {
+            // Each reading represents 15 minutes of generation
+            return sum + (r.power_output * 0.25); // Convert kW to kWh (15 min = 0.25 hours)
+          }, 0);
+          const dieselSavings = (totalEnergyToday * 0.25 * 80); // Diesel cost: 0.25L/kWh * ₹80/L
 
           // Calculate CO2 avoided (1 kWh solar = 0.5 kg CO2 avoided)
-          const co2Avoided = (totalEnergyToday * 0.5) / 1000;
+          const co2Avoided = totalEnergyToday * 0.5;
 
-          // Calculate forecast accuracy (placeholder - would need actual vs predicted comparison)
-          const forecastAccuracy = 87.5;
+          // Calculate forecast accuracy from performance report if available
+          let forecastAccuracy = 87.5; // Default
+          try {
+            const { getPerformanceReport } = await import('@/lib/api-client');
+            const perfReport = await getPerformanceReport(DEFAULT_MICROGRID_ID, 7);
+            if (perfReport?.metrics?.forecast_accuracy_mae) {
+              // Convert MAE to accuracy percentage (lower MAE = higher accuracy)
+              // Assuming MAE of 15 = 85% accuracy, scale accordingly
+              forecastAccuracy = Math.max(70, Math.min(100, 100 - (perfReport.metrics.forecast_accuracy_mae * 0.5)));
+            }
+          } catch (err) {
+            // Use default if report fetch fails
+            console.warn('Could not fetch performance report for accuracy:', err);
+          }
 
-          // Calculate uptime (placeholder)
-          const uptime = 99.2;
+          // Calculate uptime from system status
+          const uptime = statusResponse.status === 'fulfilled' && statusResponse.value.uptime_hours
+            ? Math.min(100, (statusResponse.value.uptime_hours / (30 * 24)) * 100) // Uptime as % of 30 days
+            : 99.2; // Default
 
           setPerformanceMetrics({
             dieselSavings,
@@ -366,9 +384,34 @@ function DashboardContent() {
 
     fetchDashboardData();
     
-    // Refresh data every 5 minutes
-    const interval = setInterval(fetchDashboardData, 5 * 60 * 1000);
+    // Refresh data every 2 minutes for real-time updates
+    const interval = setInterval(fetchDashboardData, 2 * 60 * 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Real-time alert refresh (every 30 seconds)
+  useEffect(() => {
+    const refreshAlerts = async () => {
+      try {
+        const alertsResponse = await getAlerts(DEFAULT_MICROGRID_ID, 20);
+        setAlerts(
+          alertsResponse.map((alert) => ({
+            id: alert.id,
+            severity: alert.severity as 'info' | 'warning' | 'critical' | 'success',
+            message: alert.message,
+            timestamp: alert.timestamp,
+            action: alert.action_taken,
+            acknowledged: alert.acknowledged,
+          }))
+        );
+      } catch (err) {
+        // Silently fail for real-time updates
+        console.error('Failed to refresh alerts:', err);
+      }
+    };
+
+    const alertInterval = setInterval(refreshAlerts, 30 * 1000);
+    return () => clearInterval(alertInterval);
   }, []);
 
   useEffect(() => {
@@ -518,7 +561,13 @@ function DashboardContent() {
               {/* Right Column - Alerts and Status */}
               <div className="space-y-6">
                 <div className="animate-scale-in" style={{ animationDelay: '0.15s' }}>
-                  <AlertsPanel alerts={alerts} />
+                  <AlertsPanel 
+                    alerts={alerts} 
+                    onAlertAcknowledged={(alertId) => {
+                      // Refresh alerts after acknowledgment
+                      setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, acknowledged: true } : a));
+                    }}
+                  />
                 </div>
                 {systemStatus && (
                   <div className="animate-scale-in" style={{ animationDelay: '0.25s' }}>

@@ -182,3 +182,7 @@ Then convert GHI to power using: `power_kw = (ghi_w_m2 / 1000) * capacity_kw * 0
 **Bottom Line**: The API is **production-ready for microgrids** with the new microgrid-specific endpoint. Accuracy is good for most use cases, with optional enhancements available for advanced scenarios.
 
 
+
+
+
+

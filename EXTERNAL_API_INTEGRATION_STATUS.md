@@ -119,3 +119,7 @@ curl -X POST "http://localhost:8000/api/v1/forecast/schedule?forecast_hours=12&m
 - Mock data is used only when external API fails
 - All forecast data comes from external API (no local NGBoost/Open-Meteo)
 
+
+
+
+

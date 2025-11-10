@@ -467,6 +467,19 @@ export async function sendTestNotification(microgridId: string): Promise<{ statu
   return response.json();
 }
 
+// Alert APIs
+export async function acknowledgeAlert(alertId: number, acknowledged: boolean = true): Promise<{ status: string; alert_id: number; acknowledged: boolean }> {
+  const response = await fetch(`${API_BASE_URL}/alerts/${alertId}/acknowledge`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ acknowledged }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to acknowledge alert: ${response.status}`);
+  }
+  return response.json();
+}
+
 // Report APIs
 export async function getEnergyLossReport(
   microgridId: string,

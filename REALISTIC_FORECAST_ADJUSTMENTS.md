@@ -201,3 +201,7 @@ The forecast system now provides **realistic, physics-based predictions** that:
 - Daily energy: 4-5 kWh per kW capacity
 - More realistic power output predictions
 
+
+
+
+

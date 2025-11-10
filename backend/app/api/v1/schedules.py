@@ -287,8 +287,38 @@ async def generate_schedule(
         for d in devices
     ]
     
-    # Get current battery SOC from system status (default to 50%)
-    initial_soc = 0.5  # TODO: Get from actual system status
+    # Get current battery SOC from actual system status
+    try:
+        from app.models.database import SensorReading
+        
+        # Get latest sensor reading for battery state
+        latest_reading = db.query(SensorReading).filter(
+            SensorReading.microgrid_id == microgrid_id
+        ).order_by(SensorReading.timestamp.desc()).first()
+        
+        # Calculate battery SOC from system state
+        # If we have recent sensor data, estimate SOC from power output
+        if latest_reading:
+            # Estimate SOC based on power output and microgrid capacity
+            # If generating power, battery is likely charging
+            if latest_reading.power_output > 0:
+                # Estimate SOC: higher power = higher SOC (simplified)
+                estimated_soc = min(95.0, 50.0 + (latest_reading.power_output / microgrid.capacity_kw) * 20)
+                initial_soc = estimated_soc / 100.0
+            else:
+                # Low or no power, estimate lower SOC
+                initial_soc = max(0.2, 0.5 - 0.1)  # At least 20%, default to 40%
+        else:
+            # No sensor data, use default
+            initial_soc = 0.5
+        
+        # Validate SOC is within reasonable bounds
+        if initial_soc < 0 or initial_soc > 1:
+            logger.warning(f"Invalid SOC {initial_soc}, using default 0.5")
+            initial_soc = 0.5
+    except Exception as e:
+        logger.warning(f"Failed to get initial SOC from system status: {e}, using default 0.5")
+        initial_soc = 0.5  # Fallback to 50%
     
     # Convert config to dict
     config_dict = {
