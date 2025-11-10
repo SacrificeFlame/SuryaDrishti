@@ -12,6 +12,7 @@ import PerformanceMetrics from '@/components/dashboard/PerformanceMetrics';
 import ActionsLog from '@/components/dashboard/ActionsLog';
 import SolarPanelsVisualization from '@/components/dashboard/SolarPanelsVisualization';
 import HamburgerMenu from '@/components/dashboard/HamburgerMenu';
+import AccountPanel from '@/components/dashboard/AccountPanel';
 import ThemeToggle from '@/components/ThemeToggle';
 import { MapPin, Bell, Cloud, Battery, Activity, TrendingUp, Map, ArrowRight } from 'lucide-react';
 import {
@@ -477,6 +478,7 @@ function DashboardContent() {
                 </div>
               </div>
               <div className="flex items-center gap-2 sm:gap-4">
+                <AccountPanel />
                 <ThemeToggle />
               </div>
             </div>

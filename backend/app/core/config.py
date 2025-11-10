@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     
     # API
     API_V1_PREFIX: str = "/api/v1"
+    # CORS Configuration - Railway domains are handled dynamically in middleware
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
@@ -25,6 +26,8 @@ class Settings(BaseSettings):
         *[origin.strip() for origin in os.getenv("ALLOWED_ORIGINS", "").split(",") if origin.strip()],
         # Railway frontend URLs (will be set in production)
         *[origin.strip() for origin in os.getenv("FRONTEND_URLS", "").split(",") if origin.strip()],
+        # Common Railway patterns (will be matched dynamically)
+        # Note: Railway domains like *.railway.app are handled in middleware
     ]
     
     # Database

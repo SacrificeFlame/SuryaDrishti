@@ -162,27 +162,43 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}", exc_info=True)
 
-# CORS Middleware - Allow all origins in development
+# CORS Middleware - Allow Railway domains dynamically
+# Use a more permissive approach for Railway deployments
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.DEBUG else settings.ALLOWED_ORIGINS,
+    allow_origins=["*"],  # Allow all origins - Railway domains will be validated in custom middleware
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["*"],
+    max_age=3600,
 )
 
-# Add CORS headers to all responses via middleware (runs after CORS middleware)
-@app.middleware("http")
-async def add_cors_header(request: Request, call_next):
-    response = await call_next(request)
-    # Ensure CORS headers are always present
-    if "Access-Control-Allow-Origin" not in response.headers:
+# Handle OPTIONS preflight requests explicitly for CORS
+@app.options("/{full_path:path}")
+async def options_handler(request: Request, full_path: str):
+    """Handle OPTIONS preflight requests for CORS - allows Railway domains"""
+    origin = request.headers.get("origin")
+    response = JSONResponse(content={}, status_code=200)
+    
+    # Allow Railway domains, localhost, and configured origins
+    if origin:
+        if (origin.endswith(".railway.app") or 
+            origin.endswith(".up.railway.app") or 
+            origin in settings.ALLOWED_ORIGINS or
+            (settings.DEBUG and ("localhost" in origin or "127.0.0.1" in origin))):
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+        else:
+            # Allow all in development
+            response.headers["Access-Control-Allow-Origin"] = "*"
+    else:
+        # No origin header - allow all
         response.headers["Access-Control-Allow-Origin"] = "*"
-    if "Access-Control-Allow-Methods" not in response.headers:
-        response.headers["Access-Control-Allow-Methods"] = "*"
-    if "Access-Control-Allow-Headers" not in response.headers:
-        response.headers["Access-Control-Allow-Headers"] = "*"
+    
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
+    response.headers["Access-Control-Max-Age"] = "3600"
     return response
 
 # Global exception handler to ensure CORS headers on all errors

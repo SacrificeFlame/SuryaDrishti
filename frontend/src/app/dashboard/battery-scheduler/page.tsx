@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import HamburgerMenu from '@/components/dashboard/HamburgerMenu';
+import AccountPanel from '@/components/dashboard/AccountPanel';
 import ThemeToggle from '@/components/ThemeToggle';
 import ForecastSchedule from '@/components/dashboard/ForecastSchedule';
 import { useMicrogridForecast } from '@/hooks/useForecast';
@@ -201,6 +202,7 @@ function BatterySchedulerContent() {
                   <RefreshCw className={`w-4 h-4 ${loading || forecastLoading ? 'animate-spin' : ''}`} />
                   Refresh
                 </button>
+                <AccountPanel />
                 <ThemeToggle />
               </div>
             </div>
@@ -240,8 +242,16 @@ function BatterySchedulerContent() {
             {/* Error Message */}
             {(error || forecastError) && (
               <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p className="text-red-800 dark:text-red-300">
-                  Error: {error || forecastError || 'Failed to load schedule'}
+                <p className="text-sm font-semibold text-red-800 dark:text-red-300 mb-2">
+                  Error: Failed to connect to backend server
+                </p>
+                <p className="text-xs text-red-700 dark:text-red-400">
+                  {error?.includes('CORS') || forecastError?.includes('CORS') 
+                    ? 'CORS error: Backend server may not be configured to allow requests from this domain.'
+                    : error || forecastError || 'Please check if the backend server is running and accessible.'}
+                </p>
+                <p className="text-xs text-red-600 dark:text-red-500 mt-2">
+                  If this persists, check your network connection and backend service status.
                 </p>
               </div>
             )}
