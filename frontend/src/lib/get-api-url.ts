@@ -37,47 +37,86 @@ export function getApiUrl(): string {
   if (typeof window !== 'undefined') {
     // Client-side: Check if we can detect the backend from the current domain
     const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
     
     // If we're on the custom domain (www.suryadrishti.in or suryadrishti.in)
     if (hostname.includes('suryadrishti.in')) {
-      // Try common backend URL patterns for Railway
-      // Pattern 1: Backend might be on a subdomain (api.suryadrishti.in)
-      // Pattern 2: Backend might be on a different Railway service (needs NEXT_PUBLIC_API_URL)
-      // Pattern 3: Backend might be on the same domain with /api path
+      console.error('═══════════════════════════════════════════════════════════');
+      console.error('🚨 BACKEND URL CONFIGURATION ERROR 🚨');
+      console.error('═══════════════════════════════════════════════════════════');
+      console.error('');
+      console.error('The frontend cannot connect to the backend because:');
+      console.error('1. NEXT_PUBLIC_API_URL is set to a non-existent backend URL');
+      console.error('2. OR NEXT_PUBLIC_API_URL is not set correctly');
+      console.error('');
+      console.error('Current hostname:', hostname);
+      console.error('NEXT_PUBLIC_API_URL:', envApiUrl || 'NOT SET');
+      console.error('');
+      console.error('═══════════════════════════════════════════════════════════');
+      console.error('📋 HOW TO FIX THIS (STEP BY STEP):');
+      console.error('═══════════════════════════════════════════════════════════');
+      console.error('');
+      console.error('STEP 1: Find your backend Railway URL');
+      console.error('  → Go to Railway Dashboard: https://railway.app');
+      console.error('  → Open your BACKEND service (the one running Python/FastAPI)');
+      console.error('  → Go to: Settings → Networking → Public Networking');
+      console.error('  → Copy the Railway domain (e.g., my-backend-service.up.railway.app)');
+      console.error('');
+      console.error('STEP 2: Update NEXT_PUBLIC_API_URL in Railway');
+      console.error('  → Go to Railway Dashboard');
+      console.error('  → Open your FRONTEND service (the one running Next.js)');
+      console.error('  → Go to: Variables tab');
+      console.error('  → Find or add: NEXT_PUBLIC_API_URL');
+      console.error('  → Set value to: https://YOUR-BACKEND-SERVICE.up.railway.app/api/v1');
+      console.error('  → Replace YOUR-BACKEND-SERVICE with your actual backend domain');
+      console.error('');
+      console.error('STEP 3: Redeploy Frontend');
+      console.error('  → After saving the variable, Railway will auto-redeploy');
+      console.error('  → OR manually trigger a redeploy from the Deployments tab');
+      console.error('  → Wait for deployment to complete');
+      console.error('');
+      console.error('STEP 4: Verify');
+      console.error('  → Refresh this page');
+      console.error('  → Check browser console - should see: [API URL] Using NEXT_PUBLIC_API_URL: https://...');
+      console.error('  → Verify no more ERR_NAME_NOT_RESOLVED errors');
+      console.error('');
+      console.error('═══════════════════════════════════════════════════════════');
+      console.error('⚠️  IMPORTANT: You MUST redeploy after changing NEXT_PUBLIC_API_URL');
+      console.error('   Next.js bakes environment variables into the build at build time.');
+      console.error('   Changing the variable alone is not enough - you must rebuild/redeploy!');
+      console.error('═══════════════════════════════════════════════════════════');
+      console.error('');
       
-      console.error('[API URL] ERROR: Cannot determine backend URL for custom domain.');
-      console.error('[API URL] Current hostname:', hostname);
-      console.error('[API URL] NEXT_PUBLIC_API_URL is not set or is invalid.');
-      console.error('[API URL] SOLUTION: Set NEXT_PUBLIC_API_URL in Railway frontend service environment variables.');
-      console.error('[API URL] Step 1: Go to Railway Dashboard → Backend Service → Settings → Networking');
-      console.error('[API URL] Step 2: Copy your backend Railway domain (e.g., your-backend-service.up.railway.app)');
-      console.error('[API URL] Step 3: Go to Frontend Service → Variables → Add NEXT_PUBLIC_API_URL');
-      console.error('[API URL] Step 4: Set value to: https://your-backend-service.up.railway.app/api/v1');
-      console.error('[API URL] Step 5: Redeploy frontend service');
+      // Don't use fallback URL - it doesn't exist and causes confusion
+      // Instead, return a URL that will fail gracefully with a clear error
+      // This forces the user to fix the configuration
+      console.error('❌ NOT using fallback URL (api.suryadrishti.in) - it does not exist.');
+      console.error('❌ Please set NEXT_PUBLIC_API_URL to your actual Railway backend URL and redeploy.');
+      console.error('');
       
-      // Try to construct a potential backend URL
-      // Remove 'www.' prefix if present to get base domain
-      const baseDomain = hostname.replace(/^www\./, '');
-      const potentialBackendUrl = `${protocol}//api.${baseDomain}/api/v1`;
-      console.warn('[API URL] Attempting fallback URL (this may not work if backend is not on api.suryadrishti.in):', potentialBackendUrl);
-      console.warn('[API URL] NOTE: This fallback will only work if you have set up api.suryadrishti.in as a custom domain for your backend.');
-      console.warn('[API URL] RECOMMENDED: Set NEXT_PUBLIC_API_URL to your Railway backend URL instead.');
-      return potentialBackendUrl;
+      // Return a URL that will fail immediately so user knows to fix it
+      // Using a clearly invalid URL pattern so it's obvious it's a configuration issue
+      return 'https://BACKEND-URL-NOT-CONFIGURED.railway.app/api/v1';
     }
     
     // If we're on a Railway domain (frontend)
     if (hostname.includes('railway.app')) {
-      // For Railway deployments, backend should be set via NEXT_PUBLIC_API_URL
-      // If not set, we can't guess it - user must configure it
-      console.error('[API URL] ERROR: NEXT_PUBLIC_API_URL is not set for Railway deployment.');
-      console.error('[API URL] Current hostname:', hostname);
-      console.error('[API URL] SOLUTION: Set NEXT_PUBLIC_API_URL in Railway frontend service environment variables.');
-      console.error('[API URL] Go to Railway Dashboard → Frontend Service → Variables → Add NEXT_PUBLIC_API_URL');
-      console.error('[API URL] Value should be: https://your-backend-service.railway.app/api/v1');
+      console.error('═══════════════════════════════════════════════════════════');
+      console.error('🚨 BACKEND URL NOT CONFIGURED 🚨');
+      console.error('═══════════════════════════════════════════════════════════');
+      console.error('');
+      console.error('Current hostname:', hostname);
+      console.error('NEXT_PUBLIC_API_URL:', envApiUrl || 'NOT SET');
+      console.error('');
+      console.error('SOLUTION:');
+      console.error('1. Go to Railway Dashboard → Frontend Service → Variables');
+      console.error('2. Add NEXT_PUBLIC_API_URL');
+      console.error('3. Set to: https://your-backend-service.railway.app/api/v1');
+      console.error('4. Redeploy frontend service');
+      console.error('');
+      console.error('═══════════════════════════════════════════════════════════');
       
-      // Return localhost as fallback (won't work in production, but at least won't crash)
-      return 'http://localhost:8000/api/v1';
+      // Return a clearly invalid URL so user knows to configure it
+      return 'https://BACKEND-URL-NOT-CONFIGURED.railway.app/api/v1';
     }
     
     // Localhost development
