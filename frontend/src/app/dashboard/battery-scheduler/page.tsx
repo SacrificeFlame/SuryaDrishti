@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
+import HamburgerMenu from '@/components/dashboard/HamburgerMenu';
 import ThemeToggle from '@/components/ThemeToggle';
 import ForecastSchedule from '@/components/dashboard/ForecastSchedule';
 import { useMicrogridForecast } from '@/hooks/useForecast';
@@ -177,30 +177,22 @@ function BatterySchedulerContent() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
-      <DashboardSidebar />
+      <HamburgerMenu />
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col lg:ml-0">
         {/* Header */}
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
-          <div className="px-6 py-4">
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30">
+          <div className="px-4 sm:px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/dashboard"
-                  className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                  <span className="text-sm font-medium">Back to Dashboard</span>
-                </Link>
-                <div className="h-6 w-px bg-slate-300 dark:bg-slate-700" />
+              <div className="flex items-center gap-2 sm:gap-4">
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Battery Scheduler</h1>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-50">Battery Scheduler</h1>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                     Optimized battery charging and discharging schedule
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <button
                   onClick={handleRefresh}
                   disabled={loading || forecastLoading}

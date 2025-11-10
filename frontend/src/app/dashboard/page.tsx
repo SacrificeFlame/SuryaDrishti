@@ -9,7 +9,7 @@ import IrradianceForecast from '@/components/dashboard/IrradianceForecast';
 import AlertsPanel from '@/components/dashboard/AlertsPanel';
 import SystemStatus from '@/components/dashboard/SystemStatus';
 import PerformanceMetrics from '@/components/dashboard/PerformanceMetrics';
-import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
+import HamburgerMenu from '@/components/dashboard/HamburgerMenu';
 import ThemeToggle from '@/components/ThemeToggle';
 import { MapPin, Bell, Cloud, Battery, Activity, TrendingUp, Map, ArrowRight } from 'lucide-react';
 import {
@@ -405,43 +405,23 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
-      <DashboardSidebar />
+      <HamburgerMenu />
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col lg:ml-0">
         {/* Header */}
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
-          <div className="px-6 py-4">
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30">
+          <div className="px-4 sm:px-6 py-4">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Dashboard Overview</h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  {location.lat.toFixed(4)}°N, {location.lon.toFixed(4)}°E
-                </p>
-              </div>
               <div className="flex items-center gap-4">
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-50">Dashboard Overview</h1>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    {location.lat.toFixed(4)}°N, {location.lon.toFixed(4)}°E
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-4">
                 <ThemeToggle />
-                <Link href="/settings" className="relative group">
-                  {user?.profile_picture ? (
-                    <img
-                      src={user.profile_picture.startsWith('/') ? `${API_BASE_URL_NO_SUFFIX}${user.profile_picture}` : user.profile_picture}
-                      alt={user.username}
-                      className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-700 object-cover hover:border-amber-500 dark:hover:border-amber-500 transition-colors"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-pink-500 flex items-center justify-center border-2 border-slate-200 dark:border-slate-700 hover:border-amber-500 dark:hover:border-amber-500 transition-colors">
-                      <span className="text-white text-sm font-bold">
-                        {user?.username?.[0]?.toUpperCase() || 'U'}
-                      </span>
-                    </div>
-                  )}
-                </Link>
-                <button
-                  onClick={logout}
-                  className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-                  title="Logout"
-                >
-                  Logout
-                </button>
               </div>
             </div>
           </div>
