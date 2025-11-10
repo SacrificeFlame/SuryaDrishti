@@ -123,3 +123,6 @@ curl -X POST "http://localhost:8000/api/v1/forecast/schedule?forecast_hours=12&m
 
 
 
+
+
+

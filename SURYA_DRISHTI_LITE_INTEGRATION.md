@@ -204,3 +204,6 @@ curl "http://localhost:8000/api/v1/forecast/ngboost?lat=28.7&lon=77.1&horizon_ho
 
 
 
+
+
+

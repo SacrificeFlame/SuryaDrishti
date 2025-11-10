@@ -186,3 +186,6 @@ Then convert GHI to power using: `power_kw = (ghi_w_m2 / 1000) * capacity_kw * 0
 
 
 
+
+
+

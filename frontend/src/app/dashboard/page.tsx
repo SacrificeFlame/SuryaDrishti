@@ -10,8 +10,9 @@ import AlertsPanel from '@/components/dashboard/AlertsPanel';
 import SystemStatus from '@/components/dashboard/SystemStatus';
 import PerformanceMetrics from '@/components/dashboard/PerformanceMetrics';
 import ActionsLog from '@/components/dashboard/ActionsLog';
+import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import ThemeToggle from '@/components/ThemeToggle';
-import { Calendar, MapPin, Bell } from 'lucide-react';
+import { MapPin, Bell, Cloud, Battery, Activity, TrendingUp, Map, ArrowRight } from 'lucide-react';
 import {
   getSystemStatus,
   getAlerts,
@@ -424,52 +425,22 @@ function DashboardContent() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      {/* Header - Professional Glass Morphism */}
-      <header className="glass border-b border-slate-200/50 dark:border-slate-800/50 sticky top-0 z-50 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-pink-500 flex items-center justify-center shadow-lg shadow-amber-500/25 group-hover:scale-105 transition-transform duration-300">
-                <span className="text-xl">☀️</span>
-              </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
+      <DashboardSidebar />
+      
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-lg font-bold text-slate-900 dark:text-slate-50 group-hover:opacity-80 transition-opacity">
-                  SuryaDrishti
-                </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Solar Forecasting</p>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Dashboard Overview</h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  {location.lat.toFixed(4)}°N, {location.lon.toFixed(4)}°E
+                </p>
               </div>
-            </Link>
-            <div className="flex items-center gap-6">
-              <Link
-                href="/dashboard/forecast-schedule"
-                className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors hidden sm:flex"
-              >
-                <Calendar className="w-4 h-4 stroke-[1.5]" />
-                Forecast & Schedule
-              </Link>
-              {isTrialActive && (
-                <div className="hidden md:flex items-center gap-2 bg-amber-100 dark:bg-amber-900/20 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800">
-                  <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
-                    Trial: {trialDaysRemaining} days
-                  </span>
-                </div>
-              )}
-              <div className="text-right hidden md:flex items-center gap-3">
-                <div>
-                  <div className="flex items-center gap-1.5 justify-end mb-1">
-                    <MapPin className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 stroke-[1.5]" />
-                    <Link
-                      href="/settings"
-                      className="text-sm font-medium text-slate-900 dark:text-slate-50 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
-                    >
-                      {user?.username || 'User'}
-                    </Link>
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                    {location.lat.toFixed(4)}°N, {location.lon.toFixed(4)}°E
-                  </div>
-                </div>
+              <div className="flex items-center gap-4">
+                <ThemeToggle />
                 <Link href="/settings" className="relative group">
                   {user?.profile_picture ? (
                     <img
@@ -485,126 +456,256 @@ function DashboardContent() {
                     </div>
                   )}
                 </Link>
-              </div>
-              <ThemeToggle />
-              <button
-                onClick={logout}
-                className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-                title="Logout"
-              >
-                Logout
-              </button>
-              <div className="relative">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></div>
-                <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping opacity-75"></div>
+                <button
+                  onClick={logout}
+                  className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                  title="Logout"
+                >
+                  Logout
+                </button>
               </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 lg:px-8 py-8 animate-fade-in">
-        {isLoading && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
-            <p className="mt-4 text-slate-600 dark:text-slate-400">Loading dashboard data...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-            <p className="text-sm text-amber-800 dark:text-amber-200">
-              ⚠️ {error} - Using fallback data
-            </p>
-          </div>
-        )}
-
-        {!loading && (
-          <>
-            {/* Performance Metrics */}
-            <div className="mb-8 animate-slide-in">
-              <PerformanceMetrics metrics={performanceMetrics} />
-            </div>
-
-            {/* Main Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-              {/* Left Column - Forecast and Cloud Map */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="animate-scale-in" style={{ animationDelay: '0.1s' }}>
-                  <IrradianceForecast
-                    forecasts={forecastData?.forecasts || []}
-                    currentIrradiance={forecastData?.current_irradiance || 0}
-                    currentPower={forecastData?.current_power_output || 0}
-                    confidence={forecastData?.confidence || 0.85}
-                  />
-                </div>
-                
-                <div className="animate-scale-in" style={{ animationDelay: '0.2s' }}>
-                  <CloudMovementMap
-                    cloudData={forecastData?.cloud_data || {
-                      cloud_map: Array(20).fill(null).map(() => 
-                        Array(20).fill(null).map(() => Math.random() > 0.7 ? Math.random() : 0)
-                      ),
-                      motion_vectors: Array(20).fill(null).map(() => 
-                        Array(20).fill(null).map(() => ({
-                          x: (Math.random() - 0.5) * 2,
-                          y: (Math.random() - 0.5) * 2
-                        }))
-                      ),
-                    }}
-                    location={forecastData?.location || location}
-                  />
-                </div>
+        {/* Main Content */}
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="max-w-7xl mx-auto">
+            {isTrialActive && (
+              <div className="mb-6 flex items-center gap-2 bg-amber-100 dark:bg-amber-900/20 px-4 py-2 rounded-lg border border-amber-200 dark:border-amber-800">
+                <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                  Trial: {trialDaysRemaining} days remaining
+                </span>
               </div>
+            )}
+            {isLoading && (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+                <p className="mt-4 text-slate-600 dark:text-slate-400">Loading dashboard data...</p>
+              </div>
+            )}
 
-              {/* Right Column - Alerts and Status */}
-              <div className="space-y-6">
-                <div className="animate-scale-in" style={{ animationDelay: '0.15s' }}>
-                  <AlertsPanel 
-                    alerts={alerts} 
-                    onAlertAcknowledged={(alertId) => {
-                      // Refresh alerts after acknowledgment
-                      setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, acknowledged: true } : a));
-                    }}
-                  />
-                </div>
-                {systemStatus && (
-                  <div className="animate-scale-in" style={{ animationDelay: '0.25s' }}>
-                    <SystemStatus status={systemStatus} />
+            {error && (
+              <div className="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  ⚠️ {error} - Using fallback data
+                </p>
+              </div>
+            )}
+
+            {!loading && (
+              <>
+                {/* Quick Links */}
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4">Quick Access</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <Link
+                      href="/dashboard/forecast"
+                      className="group p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 dark:hover:border-amber-500 transition-all hover:shadow-lg"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <Cloud className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">Forecast</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Solar predictions</div>
+                    </Link>
+                    <Link
+                      href="/dashboard/battery-scheduler"
+                      className="group p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 dark:hover:border-amber-500 transition-all hover:shadow-lg"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-violet-100 dark:bg-violet-900/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <Battery className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                      </div>
+                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">Battery</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Scheduler</div>
+                    </Link>
+                    <Link
+                      href="/dashboard/alerts"
+                      className="group p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 dark:hover:border-amber-500 transition-all hover:shadow-lg relative"
+                    >
+                      {alerts.filter(a => !a.acknowledged).length > 0 && (
+                        <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                          {alerts.filter(a => !a.acknowledged).length}
+                        </span>
+                      )}
+                      <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <Bell className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">Alerts</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Notifications</div>
+                    </Link>
+                    <Link
+                      href="/dashboard/system-status"
+                      className="group p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 dark:hover:border-amber-500 transition-all hover:shadow-lg"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <Activity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">Status</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">System health</div>
+                    </Link>
+                    <Link
+                      href="/dashboard/performance"
+                      className="group p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 dark:hover:border-amber-500 transition-all hover:shadow-lg"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <TrendingUp className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                      </div>
+                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">Performance</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Analytics</div>
+                    </Link>
+                    <Link
+                      href="/dashboard/cloud-map"
+                      className="group p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 dark:hover:border-amber-500 transition-all hover:shadow-lg"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-sky-100 dark:bg-sky-900/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <Map className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                      </div>
+                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">Cloud Map</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Visualization</div>
+                    </Link>
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
 
-            {/* Actions Log */}
-            <div className="animate-scale-in" style={{ animationDelay: '0.3s' }}>
-              <ActionsLog actions={actionsLog} />
-            </div>
-          </>
-        )}
-      </main>
+                {/* Performance Metrics */}
+                <div className="mb-8">
+                  <PerformanceMetrics metrics={performanceMetrics} />
+                </div>
 
-      {/* Footer - Minimal Professional */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 mt-16">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
-            <div className="font-medium">
-              Last updated: <span className="text-slate-900 dark:text-slate-100">{currentTime || 'Loading...'}</span>
-            </div>
-            <div className="flex items-center gap-6">
-              <span className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></div>
-                <span className="font-medium">API Connected</span>
-              </span>
-              <span className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></div>
-                <span className="font-medium">ML Models Active</span>
-              </span>
-            </div>
+                {/* Main Grid - Preview Cards */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                  {/* Left Column - Forecast and Cloud Map Preview */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <Link href="/dashboard/forecast" className="block group">
+                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover group-hover:border-amber-500 dark:group-hover:border-amber-500 transition-all">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50">Solar Forecast</h3>
+                          <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
+                        </div>
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                              <div className="text-xs text-blue-600 dark:text-blue-400 mb-1">Current Irradiance</div>
+                              <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
+                                {forecastData?.current_irradiance?.toFixed(0) || 0} W/m²
+                              </div>
+                            </div>
+                            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
+                              <div className="text-xs text-emerald-600 dark:text-emerald-400 mb-1">Power Output</div>
+                              <div className="text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                                {forecastData?.current_power_output?.toFixed(1) || 0} kW
+                              </div>
+                            </div>
+                            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
+                              <div className="text-xs text-purple-600 dark:text-purple-400 mb-1">Confidence</div>
+                              <div className="text-lg font-bold text-purple-700 dark:text-purple-300">
+                                {((forecastData?.confidence || 0.85) * 100).toFixed(0)}%
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-sm text-slate-500 dark:text-slate-400">
+                            {forecastData?.forecasts?.length || 0} forecast points available
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                    
+                    <Link href="/dashboard/cloud-map" className="block group">
+                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover group-hover:border-amber-500 dark:group-hover:border-amber-500 transition-all">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50">Cloud Movement Map</h3>
+                          <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
+                        </div>
+                        <div className="h-48 bg-gradient-to-br from-blue-100 to-sky-100 dark:from-blue-900/20 dark:to-sky-900/20 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700">
+                          <div className="text-center">
+                            <Map className="w-12 h-12 text-sky-500 dark:text-sky-400 mx-auto mb-2" />
+                            <div className="text-sm text-slate-600 dark:text-slate-400">Cloud coverage visualization</div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+
+                  {/* Right Column - Alerts and Status Preview */}
+                  <div className="space-y-6">
+                    <Link href="/dashboard/alerts" className="block group">
+                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover group-hover:border-amber-500 dark:group-hover:border-amber-500 transition-all">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50">Alerts</h3>
+                          <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
+                        </div>
+                        <div className="space-y-2">
+                          {alerts.slice(0, 3).map((alert) => (
+                            <div key={alert.id} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                                  alert.severity === 'critical' ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300' :
+                                  alert.severity === 'warning' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300' :
+                                  'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                                }`}>
+                                  {alert.severity}
+                                </span>
+                                <span className="text-xs text-slate-500 dark:text-slate-400">
+                                  {new Date(alert.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                              <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-2">{alert.message}</p>
+                            </div>
+                          ))}
+                          {alerts.length === 0 && (
+                            <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                              No active alerts
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                    <Link href="/dashboard/system-status" className="block group">
+                      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover group-hover:border-amber-500 dark:group-hover:border-amber-500 transition-all">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50">System Status</h3>
+                          <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
+                        </div>
+                        {systemStatus ? (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                              <span className="text-sm text-slate-600 dark:text-slate-400">Battery SOC</span>
+                              <span className="text-lg font-bold text-slate-900 dark:text-slate-50">
+                                {systemStatus.battery_soc.toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                              <span className="text-sm text-slate-600 dark:text-slate-400">Solar Generation</span>
+                              <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                {systemStatus.solar_generation_kw.toFixed(1)} kW
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                              <span className="text-sm text-slate-600 dark:text-slate-400">Total Load</span>
+                              <span className="text-lg font-bold text-slate-900 dark:text-slate-50">
+                                {systemStatus.load_kw.toFixed(1)} kW
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+                            No status data available
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Actions Log */}
+                <div>
+                  <ActionsLog actions={actionsLog} />
+                </div>
+              </>
+            )}
           </div>
-        </div>
-      </footer>
+        </main>
+      </div>
     </div>
   );
 }

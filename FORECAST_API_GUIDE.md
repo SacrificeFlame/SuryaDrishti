@@ -147,3 +147,6 @@ curl "http://localhost:8000/api/v1/forecast/hybrid?lat=28.7&lon=77.1&use_satelli
 
 
 
+
+
+

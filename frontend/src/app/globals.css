@@ -60,6 +60,14 @@ html {
   background: rgba(71, 85, 105, 0.7);
 }
 
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Professional Animations */
 @keyframes fadeIn {
   from {
