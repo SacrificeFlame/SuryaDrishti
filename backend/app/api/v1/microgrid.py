@@ -37,7 +37,6 @@ async def get_microgrid(microgrid_id: str, db: Session = Depends(get_db), respon
         raise
     except Exception as e:
         logger.error(f"Error getting microgrid {microgrid_id}: {e}", exc_info=True)
-        import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
@@ -514,7 +513,7 @@ async def update_diesel_status(
         mapped_status = 'running' if status == 'on' else status
         
         # Store diesel status in SystemConfiguration
-        from app.models.database import SystemConfiguration
+        # SystemConfiguration is already imported at top level
         config = db.query(SystemConfiguration).filter(
             SystemConfiguration.microgrid_id == microgrid_id
         ).first()
