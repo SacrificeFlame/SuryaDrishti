@@ -299,75 +299,75 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
                     # Create default configuration if it doesn't exist
                     logger.info(f"Creating default SystemConfiguration for {microgrid_id}")
                     try:
-                        # Try to create with generator_status
-                        config = SystemConfiguration(
-                            microgrid_id=microgrid_id,
-                            battery_capacity_kwh=100.0,
-                            battery_max_charge_rate_kw=20.0,
-                            battery_max_discharge_rate_kw=20.0,
-                            battery_min_soc=0.2,
-                            battery_max_soc=0.95,
-                            battery_efficiency=0.95,
-                            grid_peak_rate_per_kwh=10.0,
-                            grid_off_peak_rate_per_kwh=5.0,
-                            grid_peak_hours={'start': 8, 'end': 20},
-                            grid_export_rate_per_kwh=4.0,
-                            grid_export_enabled=True,
-                            generator_fuel_cost_per_liter=85.0,
-                            generator_fuel_consumption_l_per_kwh=0.25,
-                            generator_min_runtime_minutes=30,
-                            generator_max_power_kw=20.0,
-                            generator_status='off',
-                            optimization_mode='cost',
-                            safety_margin_critical_loads=0.1
-                        )
-                        db.add(config)
-                        db.commit()
-                        db.refresh(config)
-                        diesel_status = 'off'
-                        logger.info(f"Created SystemConfiguration with generator_status='off'")
-                    except Exception as create_error:
-                        # If generator_status column doesn't exist, create without it
-                        logger.warning(f"Could not create config with generator_status: {create_error}")
-                        # Try creating without generator_status
-                        config_data = {
-                            'microgrid_id': microgrid_id,
-                            'battery_capacity_kwh': 100.0,
-                            'battery_max_charge_rate_kw': 20.0,
-                            'battery_max_discharge_rate_kw': 20.0,
-                            'battery_min_soc': 0.2,
-                            'battery_max_soc': 0.95,
-                            'battery_efficiency': 0.95,
-                            'grid_peak_rate_per_kwh': 10.0,
-                            'grid_off_peak_rate_per_kwh': 5.0,
-                            'grid_peak_hours': {'start': 8, 'end': 20},
-                            'grid_export_rate_per_kwh': 4.0,
-                            'grid_export_enabled': True,
-                            'generator_fuel_cost_per_liter': 85.0,
-                            'generator_fuel_consumption_l_per_kwh': 0.25,
-                            'generator_min_runtime_minutes': 30,
-                            'generator_max_power_kw': 20.0,
-                            'optimization_mode': 'cost',
-                            'safety_margin_critical_loads': 0.1
-                        }
-                        # Only add generator_status if the column exists
+                        # First, try to create with all fields including generator_status
                         try:
-                            config_data['generator_status'] = 'off'
-                        except:
-                            pass
-                        config = SystemConfiguration(**config_data)
-                        db.add(config)
-                        db.commit()
-                        db.refresh(config)
-                        diesel_status = 'off'
+                            config = SystemConfiguration(
+                                microgrid_id=microgrid_id,
+                                battery_capacity_kwh=100.0,
+                                battery_max_charge_rate_kw=20.0,
+                                battery_max_discharge_rate_kw=20.0,
+                                battery_min_soc=0.2,
+                                battery_max_soc=0.95,
+                                battery_efficiency=0.95,
+                                grid_peak_rate_per_kwh=10.0,
+                                grid_off_peak_rate_per_kwh=5.0,
+                                grid_peak_hours={'start': 8, 'end': 20},
+                                grid_export_rate_per_kwh=4.0,
+                                grid_export_enabled=True,
+                                generator_fuel_cost_per_liter=85.0,
+                                generator_fuel_consumption_l_per_kwh=0.25,
+                                generator_min_runtime_minutes=30,
+                                generator_max_power_kw=20.0,
+                                generator_status='off',
+                                optimization_mode='cost',
+                                safety_margin_critical_loads=0.1
+                            )
+                            db.add(config)
+                            db.commit()
+                            db.refresh(config)
+                            diesel_status = 'off'
+                            logger.info(f"Created SystemConfiguration with generator_status='off'")
+                        except Exception as create_with_status_error:
+                            # If generator_status column doesn't exist, try creating without it
+                            logger.warning(f"Could not create config with generator_status (column may not exist): {create_with_status_error}")
+                            db.rollback()  # Rollback the failed transaction
+                            # Create without generator_status - it will use the default from the model
+                            config = SystemConfiguration(
+                                microgrid_id=microgrid_id,
+                                battery_capacity_kwh=100.0,
+                                battery_max_charge_rate_kw=20.0,
+                                battery_max_discharge_rate_kw=20.0,
+                                battery_min_soc=0.2,
+                                battery_max_soc=0.95,
+                                battery_efficiency=0.95,
+                                grid_peak_rate_per_kwh=10.0,
+                                grid_off_peak_rate_per_kwh=5.0,
+                                grid_peak_hours={'start': 8, 'end': 20},
+                                grid_export_rate_per_kwh=4.0,
+                                grid_export_enabled=True,
+                                generator_fuel_cost_per_liter=85.0,
+                                generator_fuel_consumption_l_per_kwh=0.25,
+                                generator_min_runtime_minutes=30,
+                                generator_max_power_kw=20.0,
+                                # Don't set generator_status - let it use default or skip if column doesn't exist
+                                optimization_mode='cost',
+                                safety_margin_critical_loads=0.1
+                            )
+                            db.add(config)
+                            db.commit()
+                            db.refresh(config)
+                            diesel_status = 'off'  # Use default since we can't set it
+                            logger.info(f"Created SystemConfiguration without generator_status (using default 'off')")
+                    except Exception as create_error:
+                        # If creation completely fails, log and continue with default
+                        logger.error(f"Failed to create SystemConfiguration: {create_error}", exc_info=True)
+                        db.rollback()  # Ensure rollback on error
+                        diesel_status = 'off'  # Use default
             except Exception as query_error:
                 logger.error(f"Error querying SystemConfiguration: {query_error}", exc_info=True)
-                # Check if it's a column missing error
-                if 'generator_status' in str(query_error) or 'no such column' in str(query_error).lower():
-                    logger.warning("generator_status column may not exist in database - using default 'off'")
-                    diesel_status = 'off'
-                else:
-                    raise
+                logger.error(f"Traceback: {traceback.format_exc()}")
+                # Don't raise - just use default status
+                diesel_status = 'off'
         except Exception as e:
             logger.error(f"Error with SystemConfiguration: {e}", exc_info=True)
             logger.error(f"Traceback: {traceback.format_exc()}")
