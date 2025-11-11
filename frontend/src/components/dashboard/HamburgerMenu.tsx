@@ -80,6 +80,7 @@ export default function HamburgerMenu() {
     { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Forecast', href: '/dashboard/forecast', icon: Cloud },
     { name: 'Battery Scheduler', href: '/dashboard/battery-scheduler', icon: Battery },
+    { name: 'Grid Export', href: '/dashboard/grid-export', icon: Zap },
     { name: 'Alerts', href: '/dashboard/alerts', icon: Bell },
     { name: 'System Status', href: '/dashboard/system-status', icon: Activity },
     { name: 'Performance', href: '/dashboard/performance', icon: TrendingUp },

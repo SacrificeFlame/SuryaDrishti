@@ -8,7 +8,6 @@ import HamburgerMenu from '@/components/dashboard/HamburgerMenu';
 import AccountPanel from '@/components/dashboard/AccountPanel';
 import ThemeToggle from '@/components/ThemeToggle';
 import ForecastSchedule from '@/components/dashboard/ForecastSchedule';
-import GridExportSection from '@/components/dashboard/GridExportSection';
 import { useMicrogridForecast } from '@/hooks/useForecast';
 import { generateSchedule } from '@/lib/api-client';
 import { getMicrogridInfo } from '@/lib/api-client';

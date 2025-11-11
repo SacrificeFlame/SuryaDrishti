@@ -11,6 +11,7 @@ import SystemStatus from '@/components/dashboard/SystemStatus';
 import PerformanceMetrics from '@/components/dashboard/PerformanceMetrics';
 import ActionsLog from '@/components/dashboard/ActionsLog';
 import SolarPanelsVisualization from '@/components/dashboard/SolarPanelsVisualization';
+import GridExportRecommendations from '@/components/dashboard/GridExportRecommendations';
 import HamburgerMenu, { HamburgerMenuButton } from '@/components/dashboard/HamburgerMenu';
 import AccountPanel from '@/components/dashboard/AccountPanel';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -560,6 +561,9 @@ function DashboardContent() {
 
             {!loading && (
               <>
+                {/* Grid Export Recommendations */}
+                <GridExportRecommendations microgridId={DEFAULT_MICROGRID_ID} />
+
                 {/* Quick Links */}
                 <div className="mb-8">
                   <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4">Quick Access</h2>
