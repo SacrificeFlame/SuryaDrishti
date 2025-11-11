@@ -243,11 +243,11 @@ export default function LandingPage() {
               Choose the plan that fits your microgrid needs
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {[
               {
-                name: 'Starter',
-                price: '₹9,999',
+                name: 'Basic',
+                price: '₹3,999',
                 period: '/month',
                 description: 'Perfect for small microgrids',
                 features: [
@@ -261,8 +261,8 @@ export default function LandingPage() {
                 popular: false,
               },
               {
-                name: 'Professional',
-                price: '₹24,999',
+                name: 'Standard',
+                price: '₹7,999',
                 period: '/month',
                 description: 'For growing operations',
                 features: [
@@ -277,9 +277,25 @@ export default function LandingPage() {
                 popular: true,
               },
               {
+                name: 'Premium',
+                price: '₹14,999',
+                period: '/month',
+                description: 'For advanced operations',
+                features: [
+                  'Up to 25 microgrids',
+                  'Advanced ML forecasting',
+                  'Real-time alerts & actions',
+                  'Priority support',
+                  'Advanced analytics',
+                  'Dedicated account manager',
+                ],
+                cta: 'Start Free Trial',
+                popular: false,
+              },
+              {
                 name: 'Enterprise',
-                price: 'Custom',
-                period: '',
+                price: '₹49,999',
+                period: '/month',
                 description: 'For large deployments',
                 features: [
                   'Unlimited microgrids',
@@ -287,7 +303,7 @@ export default function LandingPage() {
                   'Dedicated support',
                   'On-site training',
                   'SLA guarantee',
-                  'Custom features',
+                  '24/7 support',
                 ],
                 cta: 'Contact Sales',
                 popular: false,
