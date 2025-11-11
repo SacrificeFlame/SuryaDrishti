@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import HamburgerMenu from '@/components/dashboard/HamburgerMenu';
+import HamburgerMenu, { HamburgerMenuButton } from '@/components/dashboard/HamburgerMenu';
 import SystemStatus from '@/components/dashboard/SystemStatus';
 import ThemeToggle from '@/components/ThemeToggle';
 import { ArrowLeft, RefreshCw, Activity } from 'lucide-react';
@@ -45,13 +45,25 @@ function SystemStatusContent() {
               : 5.0)); // Default to 5kW during day if no data
         
         setSystemStatus({
-          battery_soc: status.battery.soc,
-          diesel_status: status.diesel.status as 'standby' | 'running' | 'off',
+          battery_soc: status.battery?.soc || 50,
+          diesel_status: (status.diesel?.status || 'off') as 'standby' | 'running' | 'off',
           load_kw: totalLoad,
           solar_generation_kw: solarGen,
-          grid_import_kw: Math.max(0, totalLoad - solarGen - (status.battery.current > 0 ? status.battery.current * 0.05 : 0)),
+          grid_import_kw: Math.max(0, totalLoad - solarGen - (status.battery?.current && status.battery.current > 0 ? status.battery.current * 0.05 : 0)),
           uptime_hours: status.uptime_hours || 0,
           last_updated: status.timestamp,
+        });
+      } else {
+        // If status fetch failed, log error and set default values
+        console.error('Failed to fetch system status:', statusResponse);
+        setSystemStatus({
+          battery_soc: 50,
+          diesel_status: 'off',
+          load_kw: 0,
+          solar_generation_kw: 0,
+          grid_import_kw: 0,
+          uptime_hours: 0,
+          last_updated: new Date().toISOString(),
         });
       }
     } catch (err) {
@@ -77,6 +89,7 @@ function SystemStatusContent() {
           <div className="px-4 sm:px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-4">
+                <HamburgerMenuButton />
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-50">System Status</h1>
                   <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">

@@ -171,14 +171,14 @@ export default function PurchasePage() {
                   {plan.monthlyPrice === 0 ? (
                     <span className="text-3xl font-bold text-gray-900 dark:text-white">Custom</span>
                   ) : (
-                    <>
+                    <div className="flex items-baseline gap-1 flex-wrap">
                       <span className="text-3xl font-bold text-gray-900 dark:text-white">
                         ₹{billingCycle === 'monthly' ? plan.monthlyPrice.toLocaleString() : plan.yearlyPrice.toLocaleString()}
                       </span>
-                      <span className="text-gray-600 dark:text-gray-400">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
                         /{billingCycle === 'monthly' ? 'month' : 'year'}
                       </span>
-                    </>
+                    </div>
                   )}
                 </div>
                 <ul className="space-y-2">

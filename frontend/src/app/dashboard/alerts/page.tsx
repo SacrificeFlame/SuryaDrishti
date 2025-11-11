@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import HamburgerMenu from '@/components/dashboard/HamburgerMenu';
+import HamburgerMenu, { HamburgerMenuButton } from '@/components/dashboard/HamburgerMenu';
 import AlertsPanel from '@/components/dashboard/AlertsPanel';
 import ThemeToggle from '@/components/ThemeToggle';
 import { ArrowLeft, RefreshCw, Filter } from 'lucide-react';
@@ -80,6 +80,7 @@ function AlertsContent() {
           <div className="px-4 sm:px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-4">
+                <HamburgerMenuButton />
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-50">Alerts</h1>
                   <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">

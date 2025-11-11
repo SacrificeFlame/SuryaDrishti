@@ -11,7 +11,7 @@ import SystemStatus from '@/components/dashboard/SystemStatus';
 import PerformanceMetrics from '@/components/dashboard/PerformanceMetrics';
 import ActionsLog from '@/components/dashboard/ActionsLog';
 import SolarPanelsVisualization from '@/components/dashboard/SolarPanelsVisualization';
-import HamburgerMenu from '@/components/dashboard/HamburgerMenu';
+import HamburgerMenu, { HamburgerMenuButton } from '@/components/dashboard/HamburgerMenu';
 import AccountPanel from '@/components/dashboard/AccountPanel';
 import ThemeToggle from '@/components/ThemeToggle';
 import { MapPin, Bell, Cloud, Battery, Activity, TrendingUp, Map, ArrowRight } from 'lucide-react';
@@ -479,6 +479,7 @@ function DashboardContent() {
           <div className="px-4 sm:px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
+                <HamburgerMenuButton />
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-50">Dashboard Overview</h1>
                   <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
