@@ -139,12 +139,22 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
                         timestamp=datetime.utcnow()
                     )
                 db.add(new_reading)
-                db.commit()
-                db.refresh(new_reading)
-                latest_reading = new_reading
-                logger.info(f"Created sensor reading: power_output={latest_reading.power_output}kW, irradiance={latest_reading.irradiance}W/m²")
+                try:
+                    db.commit()
+                    db.refresh(new_reading)
+                    latest_reading = new_reading
+                    logger.info(f"Created sensor reading: power_output={latest_reading.power_output}kW, irradiance={latest_reading.irradiance}W/m²")
+                except Exception as commit_error:
+                    logger.error(f"Failed to commit sensor reading: {commit_error}", exc_info=True)
+                    db.rollback()
+                    # Continue without sensor data - will use 0
             except Exception as create_error:
                 logger.error(f"Failed to create sensor reading: {create_error}", exc_info=True)
+                logger.error(f"Traceback: {traceback.format_exc()}")
+                try:
+                    db.rollback()
+                except:
+                    pass
                 # Continue without sensor data - will use 0
         
         # Now calculate solar generation from the sensor reading (which should always exist now)
