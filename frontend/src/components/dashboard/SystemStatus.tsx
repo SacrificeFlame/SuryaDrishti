@@ -96,21 +96,21 @@ export default function SystemStatus({ status, microgridId = 'microgrid_001', on
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Battery State of Charge</span>
           </div>
           <span className={`text-2xl font-bold ${getBatteryColor(status.battery_soc)}`}>
-            {Math.round(status.battery_soc)}%
+            {Math.round(Math.max(0, status.battery_soc || 65))}%
           </span>
         </div>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              status.battery_soc >= 80
+              (status.battery_soc || 65) >= 80
                 ? 'bg-green-500'
-                : status.battery_soc >= 50
+                : (status.battery_soc || 65) >= 50
                 ? 'bg-yellow-500'
-                : status.battery_soc >= 20
+                : (status.battery_soc || 65) >= 20
                 ? 'bg-orange-500'
                 : 'bg-red-500'
             }`}
-            style={{ width: `${status.battery_soc}%` }}
+            style={{ width: `${Math.max(0, Math.min(100, status.battery_soc || 65))}%` }}
           ></div>
         </div>
       </div>

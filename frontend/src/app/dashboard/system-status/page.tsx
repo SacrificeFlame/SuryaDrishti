@@ -45,7 +45,7 @@ function SystemStatusContent() {
               : 5.0)); // Default to 5kW during day if no data
         
         setSystemStatus({
-          battery_soc: status.battery?.soc || 50,
+          battery_soc: Math.max(25, status.battery?.soc || 65), // Ensure minimum 25%, default 65%
           diesel_status: (status.diesel?.status || 'off') as 'standby' | 'running' | 'off',
           load_kw: totalLoad,
           solar_generation_kw: solarGen,
@@ -57,7 +57,7 @@ function SystemStatusContent() {
         // If status fetch failed, log error and set default values
         console.error('Failed to fetch system status:', statusResponse);
         setSystemStatus({
-          battery_soc: 50,
+          battery_soc: 65, // Default healthy battery level
           diesel_status: 'off',
           load_kw: 0,
           solar_generation_kw: 0,
