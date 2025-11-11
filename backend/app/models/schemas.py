@@ -253,7 +253,31 @@ class OptimizationMetrics(BaseModel):
     grid_energy_kwh: float
     grid_export_energy_kwh: float
     grid_export_revenue: float
-    battery_energy_kwh: float
-    generator_energy_kwh: float
+
+# Grid Provider Models
+class GridProvider(BaseModel):
+    """Grid provider information"""
+    id: str
+    name: str
+    description: Optional[str] = None
+    peak_rate_per_kwh: float  # Peak hour rate (₹/kWh)
+    off_peak_rate_per_kwh: float  # Off-peak hour rate (₹/kWh)
+    export_rate_per_kwh: float  # Feed-in tariff rate (₹/kWh)
+    peak_hours: Dict[str, int]  # e.g., {"start": 8, "end": 20}
+    coverage_areas: List[str]  # List of states/regions covered
+    is_available: bool = True
+    minimum_export_kw: Optional[float] = None  # Minimum export capacity
+    maximum_export_kw: Optional[float] = None  # Maximum export capacity
+
+class GridProviderListResponse(BaseModel):
+    """Response containing list of available grid providers for a location"""
+    location: Dict[str, float]  # {"lat": 28.4595, "lon": 77.0266}
+    providers: List[GridProvider]
+    selected_provider_id: Optional[str] = None
+
+class GridProviderSelectionRequest(BaseModel):
+    """Request to select a grid provider"""
+    provider_id: str
+    enable_export: bool = True
 
 

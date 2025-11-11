@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.config import settings
 from app.api.v1 import forecast, alerts, microgrid, sensors, satellite, auth
-from app.api.v1 import forecast_microgrid, debug, devices, schedules, configurations, forecast_validation, forecast_run, notifications, reports, db_init, metrics
+from app.api.v1 import forecast_microgrid, debug, devices, schedules, configurations, forecast_validation, forecast_run, notifications, reports, db_init, metrics, grid_providers
 from app.models.database import Base
 from app.core.database import engine
 from typing import List
@@ -374,6 +374,7 @@ app.include_router(satellite.router, prefix="/api/v1/satellite", tags=["satellit
 app.include_router(devices.router, prefix="/api/v1", tags=["devices"])
 app.include_router(schedules.router, prefix="/api/v1", tags=["schedules"])
 app.include_router(configurations.router, prefix="/api/v1", tags=["configurations"])
+app.include_router(grid_providers.router, prefix="/api/v1", tags=["grid-providers"])
 app.include_router(forecast_validation.router, prefix="/api/v1", tags=["forecast-validation"])
 app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["notifications"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])

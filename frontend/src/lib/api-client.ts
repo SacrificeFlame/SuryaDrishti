@@ -577,3 +577,82 @@ export async function getPerformanceReport(
   return response.json();
 }
 
+// Grid Provider Types
+export interface GridProvider {
+  id: string;
+  name: string;
+  description?: string;
+  peak_rate_per_kwh: number;
+  off_peak_rate_per_kwh: number;
+  export_rate_per_kwh: number;
+  peak_hours: { start: number; end: number };
+  coverage_areas: string[];
+  is_available: boolean;
+  minimum_export_kw?: number;
+  maximum_export_kw?: number;
+}
+
+export interface GridProviderListResponse {
+  location: { lat: number; lon: number };
+  providers: GridProvider[];
+  selected_provider_id?: string | null;
+}
+
+export interface GridProviderSelectionRequest {
+  provider_id: string;
+  enable_export: boolean;
+}
+
+// Grid Provider API Functions
+export async function getGridProviders(
+  microgridId: string,
+  lat: number,
+  lon: number
+): Promise<GridProviderListResponse> {
+  const { getApiUrl } = await import('./get-api-url');
+  const apiUrl = getApiUrl();
+  const response = await fetch(
+    `${apiUrl}/grid-providers?microgrid_id=${microgridId}&lat=${lat}&lon=${lon}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to get grid providers: ${response.status} - ${errorText}`);
+  }
+
+  return response.json();
+}
+
+export async function selectGridProvider(
+  microgridId: string,
+  selection: GridProviderSelectionRequest
+): Promise<SystemConfiguration> {
+  const { getApiUrl } = await import('./get-api-url');
+  const apiUrl = getApiUrl();
+  const response = await fetch(
+    `${apiUrl}/grid-providers/select?microgrid_id=${microgridId}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(selection),
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to select grid provider: ${response.status} - ${errorText}`);
+  }
+
+  return response.json();
+}
+

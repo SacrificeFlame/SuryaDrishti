@@ -8,6 +8,7 @@ import HamburgerMenu from '@/components/dashboard/HamburgerMenu';
 import AccountPanel from '@/components/dashboard/AccountPanel';
 import ThemeToggle from '@/components/ThemeToggle';
 import ForecastSchedule from '@/components/dashboard/ForecastSchedule';
+import GridExportSection from '@/components/dashboard/GridExportSection';
 import { useMicrogridForecast } from '@/hooks/useForecast';
 import { generateSchedule } from '@/lib/api-client';
 import { getMicrogridInfo } from '@/lib/api-client';
@@ -255,6 +256,19 @@ function BatterySchedulerContent() {
                 </p>
               </div>
             )}
+
+            {/* Grid Export Section */}
+            <div className="mb-6">
+              <GridExportSection
+                microgridId={DEFAULT_MICROGRID_ID}
+                latitude={location.lat}
+                longitude={location.lon}
+                onProviderSelected={() => {
+                  // Refresh schedule when grid provider is selected
+                  handleRefresh();
+                }}
+              />
+            </div>
 
             {/* Schedule Component */}
             {scheduleData && (
