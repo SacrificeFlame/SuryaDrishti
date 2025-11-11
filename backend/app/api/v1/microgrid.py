@@ -96,7 +96,7 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
         # Get real sensor data for status
         latest_reading = None
         try:
-            from app.models.database import SensorReading
+            # SensorReading is already imported at top level
             latest_reading = db.query(SensorReading).filter(
                 SensorReading.microgrid_id == microgrid_id
             ).order_by(SensorReading.timestamp.desc()).first()
@@ -117,7 +117,7 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
         if not latest_reading:
             logger.warning(f"No sensor reading found for {microgrid_id} - creating one with real values")
             try:
-                from app.models.database import SensorReading
+                # SensorReading is already imported at top level
                 current_hour = datetime.utcnow().hour
                 is_daytime = 6 <= current_hour < 18
                 
@@ -280,7 +280,7 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
         non_critical_load = 0.0
         
         try:
-            from app.models.database import Device
+            # Device is already imported at top level
             devices = db.query(Device).filter(
                 Device.microgrid_id == microgrid_id,
                 Device.is_active == True
@@ -308,7 +308,7 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
         # Get diesel generator status from SystemConfiguration
         diesel_status = 'off'
         try:
-            from app.models.database import SystemConfiguration
+            # SystemConfiguration is already imported at top level
             # Use getattr with try-except to handle missing column gracefully
             try:
                 config = db.query(SystemConfiguration).filter(
