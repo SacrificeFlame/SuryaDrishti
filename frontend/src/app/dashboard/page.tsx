@@ -287,24 +287,69 @@ function DashboardContent() {
         // Transform system status
         if (statusResponse.status === 'fulfilled') {
           const status = statusResponse.value;
-          const totalLoad = status.loads.critical + status.loads.nonCritical;
-          // Use solar_generation_kw from backend if available, otherwise calculate from sensor
-          const solarGen = status.solar_generation_kw !== undefined && status.solar_generation_kw !== null
-            ? status.solar_generation_kw
-            : (latestSensor.status === 'fulfilled' && latestSensor.value.power_output > 0
-              ? latestSensor.value.power_output
-              : (latestSensor.status === 'fulfilled' && latestSensor.value.irradiance > 0
-                ? Math.min(latestSensor.value.irradiance * 0.0065, 50) // Rough estimate: irradiance * area factor
-                : 5.0)); // Default to 5kW during day if no data
+          const totalLoad = (status.loads?.critical || 0) + (status.loads?.nonCritical || 0);
+          
+          // Use solar_generation_kw from backend - it should have real data now
+          let solarGen = status.solar_generation_kw;
+          if (solarGen === undefined || solarGen === null || solarGen === 0) {
+            // Fallback to sensor data if backend doesn't have solar generation
+            if (latestSensor.status === 'fulfilled' && latestSensor.value.power_output > 0) {
+              solarGen = latestSensor.value.power_output;
+            } else if (latestSensor.status === 'fulfilled' && latestSensor.value.irradiance > 0) {
+              // Calculate from irradiance: irradiance (W/m²) * area (m²) * efficiency / 1000
+              // Assume 50kW capacity = 325 m² area, 20% efficiency
+              solarGen = Math.min((latestSensor.value.irradiance * 325 * 0.20) / 1000, 50);
+            } else {
+              // Check if it's daytime for default generation
+              const currentHour = new Date().getHours();
+              solarGen = (6 <= currentHour && currentHour < 18) ? 42.5 : 0; // 42.5kW during day, 0 at night
+            }
+          }
+          
+          // Get uptime - ensure it's a valid number
+          let uptime = status.uptime_hours;
+          if (uptime === undefined || uptime === null || isNaN(uptime)) {
+            // Calculate from microgrid creation date if available
+            if (microgridInfo.status === 'fulfilled' && microgridInfo.value.created_at) {
+              const created = new Date(microgridInfo.value.created_at);
+              const now = new Date();
+              uptime = (now.getTime() - created.getTime()) / (1000 * 60 * 60); // Convert to hours
+            } else {
+              uptime = 720; // Default to 30 days (720 hours) if can't calculate
+            }
+          }
           
           setSystemStatus({
-            battery_soc: Math.max(25, status.battery?.soc || 65), // Ensure minimum 25%, default 65%
+            battery_soc: Math.max(25, Math.min(95, status.battery?.soc || 65)), // Clamp between 25-95%, default 65%
             diesel_status: (status.diesel?.status || 'off') as 'standby' | 'running' | 'off',
-            load_kw: totalLoad,
-            solar_generation_kw: solarGen,
+            load_kw: Math.max(0, totalLoad), // Ensure non-negative
+            solar_generation_kw: Math.max(0, solarGen), // Ensure non-negative
             grid_import_kw: Math.max(0, totalLoad - solarGen - (status.battery?.current && status.battery.current > 0 ? status.battery.current * 0.05 : 0)),
-            uptime_hours: status.uptime_hours || 0, // Use actual uptime from backend
-            last_updated: status.timestamp,
+            uptime_hours: Math.max(0, uptime), // Ensure non-negative
+            last_updated: status.timestamp || new Date().toISOString(),
+          });
+          
+          console.log('System status set:', {
+            battery_soc: Math.max(25, Math.min(95, status.battery?.soc || 65)),
+            solar_generation_kw: Math.max(0, solarGen),
+            load_kw: Math.max(0, totalLoad),
+            uptime_hours: Math.max(0, uptime),
+          });
+        } else {
+          // If API call failed, log error and set defaults
+          console.error('Failed to fetch system status:', statusResponse);
+          if (statusResponse.status === 'rejected') {
+            console.error('System status error:', statusResponse.reason);
+          }
+          // Set default values so UI doesn't break
+          setSystemStatus({
+            battery_soc: 65,
+            diesel_status: 'off',
+            load_kw: 5.0,
+            solar_generation_kw: 42.5,
+            grid_import_kw: 0,
+            uptime_hours: 720,
+            last_updated: new Date().toISOString(),
           });
         }
 

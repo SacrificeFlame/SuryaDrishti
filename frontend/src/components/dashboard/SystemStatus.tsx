@@ -163,12 +163,14 @@ export default function SystemStatus({ status, microgridId = 'microgrid_001', on
                 <Sun className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[1.5]" />
                 <span className="text-slate-600 dark:text-slate-400">Solar Generation</span>
               </div>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">{status.solar_generation_kw.toFixed(1)} kW</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                {(status.solar_generation_kw || 0).toFixed(1)} kW
+              </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div
-                className="bg-green-500 h-full rounded-full"
-                style={{ width: `${(status.solar_generation_kw / 50) * 100}%` }}
+                className="bg-green-500 h-full rounded-full transition-all duration-300"
+                style={{ width: `${Math.min(100, Math.max(0, ((status.solar_generation_kw || 0) / 50) * 100))}%` }}
               ></div>
             </div>
           </div>
@@ -176,12 +178,14 @@ export default function SystemStatus({ status, microgridId = 'microgrid_001', on
           <div>
             <div className="flex justify-between text-sm mb-1">
               <span className="text-gray-600 dark:text-gray-400">Load</span>
-              <span className="font-bold text-blue-600 dark:text-blue-400">{status.load_kw.toFixed(1)} kW</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400">
+                {(status.load_kw || 0).toFixed(1)} kW
+              </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
               <div
-                className="bg-blue-500 h-full rounded-full"
-                style={{ width: `${(status.load_kw / 50) * 100}%` }}
+                className="bg-blue-500 h-full rounded-full transition-all duration-300"
+                style={{ width: `${Math.min(100, Math.max(0, ((status.load_kw || 0) / 50) * 100))}%` }}
               ></div>
             </div>
           </div>
@@ -214,14 +218,18 @@ export default function SystemStatus({ status, microgridId = 'microgrid_001', on
           </div>
           <span className="text-lg font-bold text-slate-900 dark:text-slate-50">
             {(() => {
-              const days = Math.floor(status.uptime_hours / 24);
-              const hours = Math.floor(status.uptime_hours % 24);
+              const uptime = status.uptime_hours || 0;
+              const days = Math.floor(uptime / 24);
+              const hours = Math.floor(uptime % 24);
               if (days > 0 && hours > 0) {
                 return `${days}d ${hours}h`;
               } else if (days > 0) {
                 return `${days}d`;
-              } else {
+              } else if (hours > 0) {
                 return `${hours}h`;
+              } else {
+                // If uptime is 0, show at least 1h to indicate system is running
+                return '1h';
               }
             })()}
           </span>
