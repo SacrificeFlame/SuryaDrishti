@@ -609,8 +609,7 @@ export async function getGridProviders(
   lat: number,
   lon: number
 ): Promise<GridProviderListResponse> {
-  const { getApiUrl } = await import('./get-api-url');
-  const apiUrl = getApiUrl();
+  const apiUrl = getApiUrlRuntime();
   const response = await fetch(
     `${apiUrl}/grid-providers?microgrid_id=${microgridId}&lat=${lat}&lon=${lon}`,
     {
@@ -634,8 +633,7 @@ export async function selectGridProvider(
   microgridId: string,
   selection: GridProviderSelectionRequest
 ): Promise<SystemConfiguration> {
-  const { getApiUrl } = await import('./get-api-url');
-  const apiUrl = getApiUrl();
+  const apiUrl = getApiUrlRuntime();
   const response = await fetch(
     `${apiUrl}/grid-providers/select?microgrid_id=${microgridId}`,
     {
