@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.schemas import MicrogridInfo, SystemStatus
-from app.models.database import Microgrid
+from app.models.database import Microgrid, SensorReading, Device, SystemConfiguration
 from typing import List
 from datetime import datetime
 import random
@@ -55,7 +55,7 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
             if not microgrid:
                 logger.warning(f"Microgrid {microgrid_id} not found in database")
                 # Create microgrid if it doesn't exist (for development/testing)
-                from app.models.database import Microgrid
+                # Microgrid is already imported at top level - don't import again
                 microgrid = Microgrid(
                     id=microgrid_id,
                     name=f'Microgrid {microgrid_id}',
@@ -65,11 +65,19 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
                     created_at=datetime.utcnow()
                 )
                 db.add(microgrid)
-                db.commit()
-                db.refresh(microgrid)
-                logger.info(f"Created microgrid {microgrid_id} with default values")
+                try:
+                    db.commit()
+                    db.refresh(microgrid)
+                    logger.info(f"Created microgrid {microgrid_id} with default values")
+                except Exception as commit_error:
+                    logger.error(f"Failed to commit microgrid creation: {commit_error}", exc_info=True)
+                    db.rollback()
+                    raise HTTPException(status_code=500, detail=f"Failed to create microgrid: {str(commit_error)}")
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Error querying microgrid: {e}", exc_info=True)
+            logger.error(f"Traceback: {traceback.format_exc()}")
             raise HTTPException(status_code=500, detail=f"Database error querying microgrid: {str(e)}")
         
         # Calculate uptime from microgrid creation date
