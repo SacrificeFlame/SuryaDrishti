@@ -57,9 +57,39 @@ app = FastAPI(
 async def startup_event():
     """Initialize database tables on application startup and seed default data"""
     try:
-        # Create all tables
+        # Create all tables (this will create new tables but won't modify existing ones)
+        # For production, you should use Alembic migrations to add new columns
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables initialized")
+        
+        # Try to add generator_status column if it doesn't exist (for existing databases)
+        try:
+            from sqlalchemy import text, inspect
+            inspector = inspect(engine)
+            if inspector.has_table('system_configurations'):
+                columns = [col['name'] for col in inspector.get_columns('system_configurations')]
+                if 'generator_status' not in columns:
+                    logger.info("Adding generator_status column to system_configurations table")
+                    with engine.connect() as conn:
+                        # Use ALTER TABLE to add column (PostgreSQL syntax)
+                        db_url = settings.database_url_processed
+                        if db_url and 'postgresql' in db_url:
+                            conn.execute(text("ALTER TABLE system_configurations ADD COLUMN IF NOT EXISTS generator_status VARCHAR DEFAULT 'off'"))
+                            conn.commit()
+                        elif db_url and 'sqlite' in db_url:
+                            # SQLite syntax (no IF NOT EXISTS in older versions)
+                            try:
+                                conn.execute(text("ALTER TABLE system_configurations ADD COLUMN generator_status VARCHAR DEFAULT 'off'"))
+                                conn.commit()
+                            except Exception as sqlite_error:
+                                if 'duplicate column' in str(sqlite_error).lower() or 'already exists' in str(sqlite_error).lower():
+                                    logger.info("Column generator_status already exists")
+                                else:
+                                    raise
+                    logger.info("Successfully added generator_status column")
+        except Exception as migrate_error:
+            logger.warning(f"Could not add generator_status column (may already exist): {migrate_error}")
+            # Continue - column might already exist
         
         # Seed default data if microgrid_001 doesn't exist
         from app.core.database import SessionLocal
