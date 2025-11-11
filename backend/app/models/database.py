@@ -22,6 +22,8 @@ class User(Base):
     trial_start_date = Column(DateTime, nullable=True)
     trial_end_date = Column(DateTime, nullable=True)
     profile_picture = Column(String, nullable=True)  # Path or URL to profile picture
+    solar_provider = Column(String, nullable=True)  # e.g., 'Tata Power Solar', 'Adani Solar', 'Loom Solar'
+    battery_type = Column(String, nullable=True)  # e.g., 'Exide', 'Luminous', 'Amaron'
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -12,6 +12,8 @@ export interface User {
   trialStartDate?: string;
   trialEndDate?: string;
   plan?: 'trial' | 'starter' | 'professional' | 'enterprise';
+  solar_provider?: string | null;
+  battery_type?: string | null;
 }
 
 interface AuthContextType {
@@ -188,6 +190,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         plan: userData.plan as 'trial' | 'starter' | 'professional' | 'enterprise',
         trialStartDate: userData.trial_start_date || undefined,
         trialEndDate: userData.trial_end_date || undefined,
+        solar_provider: userData.solar_provider || undefined,
+        battery_type: userData.battery_type || undefined,
       };
 
       setUser(user);

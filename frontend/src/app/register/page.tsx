@@ -18,7 +18,6 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const { theme } = useTheme();
   const router = useRouter();
 
@@ -94,15 +93,9 @@ export default function RegisterPage() {
 
       console.log('[Register] Registration successful!', data);
       
-      // Set success state immediately
-      setSuccess(true);
-      setLoading(false);
-      
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        console.log('[Register] Redirecting to login...');
-        router.push('/login?registered=true');
-      }, 2000);
+      // Redirect to device onboarding page with user_id
+      console.log('[Register] Redirecting to device onboarding...');
+      router.push(`/onboard-device?user_id=${data.id}`);
     } catch (err) {
       console.error('[Register] Error:', err);
       if (err instanceof TypeError && err.message.includes('fetch')) {
@@ -114,30 +107,6 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center px-4 animate-fade-in">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-8 max-w-md w-full card-hover">
-          <div className="text-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center mx-auto mb-4 border border-emerald-200 dark:border-emerald-800">
-              <Mail className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-2">Registration Successful!</h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-4">
-              We've sent a verification email to <strong>{formData.email}</strong>
-            </p>
-            <p className="text-sm text-slate-500 dark:text-slate-500 mb-6">
-              Please check your inbox and click the verification link to activate your account.
-            </p>
-            <p className="text-xs text-slate-400 dark:text-slate-600">
-              Redirecting to login page...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center px-4 animate-fade-in">

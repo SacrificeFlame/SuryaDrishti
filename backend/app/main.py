@@ -91,6 +91,49 @@ async def startup_event():
             logger.warning(f"Could not add generator_status column (may already exist): {migrate_error}")
             # Continue - column might already exist
         
+        # Try to add solar_provider and battery_type columns to users table if they don't exist
+        try:
+            from sqlalchemy import text, inspect
+            inspector = inspect(engine)
+            if inspector.has_table('users'):
+                columns = [col['name'] for col in inspector.get_columns('users')]
+                with engine.connect() as conn:
+                    db_url = settings.database_url_processed
+                    if 'solar_provider' not in columns:
+                        logger.info("Adding solar_provider column to users table")
+                        if db_url and 'postgresql' in db_url:
+                            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS solar_provider VARCHAR"))
+                            conn.commit()
+                        elif db_url and 'sqlite' in db_url:
+                            try:
+                                conn.execute(text("ALTER TABLE users ADD COLUMN solar_provider VARCHAR"))
+                                conn.commit()
+                            except Exception as sqlite_error:
+                                if 'duplicate column' in str(sqlite_error).lower() or 'already exists' in str(sqlite_error).lower():
+                                    logger.info("Column solar_provider already exists")
+                                else:
+                                    raise
+                        logger.info("Successfully added solar_provider column")
+                    
+                    if 'battery_type' not in columns:
+                        logger.info("Adding battery_type column to users table")
+                        if db_url and 'postgresql' in db_url:
+                            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS battery_type VARCHAR"))
+                            conn.commit()
+                        elif db_url and 'sqlite' in db_url:
+                            try:
+                                conn.execute(text("ALTER TABLE users ADD COLUMN battery_type VARCHAR"))
+                                conn.commit()
+                            except Exception as sqlite_error:
+                                if 'duplicate column' in str(sqlite_error).lower() or 'already exists' in str(sqlite_error).lower():
+                                    logger.info("Column battery_type already exists")
+                                else:
+                                    raise
+                        logger.info("Successfully added battery_type column")
+        except Exception as migrate_error:
+            logger.warning(f"Could not add user device columns (may already exist): {migrate_error}")
+            # Continue - columns might already exist
+        
         # Seed default data if microgrid_001 doesn't exist
         from app.core.database import SessionLocal
         from app.models.database import Microgrid, SensorReading, Device, SystemConfiguration

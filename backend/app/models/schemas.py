@@ -109,6 +109,10 @@ class UserLogin(BaseModel):
     email_or_username: str = Field(..., description="Email or username")
     password: str = Field(..., description="Password")
 
+class DeviceOnboardingRequest(BaseModel):
+    solar_provider: str = Field(..., description="Solar panel provider (e.g., 'Tata Power Solar', 'Adani Solar', 'Loom Solar')")
+    battery_type: str = Field(..., description="Battery type (e.g., 'Exide', 'Luminous', 'Amaron')")
+
 class UserResponse(BaseModel):
     id: int
     email: str
@@ -118,6 +122,8 @@ class UserResponse(BaseModel):
     profile_picture: Optional[str] = None
     trial_start_date: Optional[str] = None  # ISO format string
     trial_end_date: Optional[str] = None  # ISO format string
+    solar_provider: Optional[str] = None
+    battery_type: Optional[str] = None
 
 class Token(BaseModel):
     access_token: str

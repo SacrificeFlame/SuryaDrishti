@@ -103,7 +103,9 @@ export default function LoginPage() {
           {searchParams.get('registered') === 'true' && (
             <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
               <p className="text-sm text-emerald-800 dark:text-emerald-300">
-                Registration successful! Please check your email to verify your account.
+                {searchParams.get('onboarded') === 'true'
+                  ? 'Registration and device onboarding successful! Please check your email to verify your account.'
+                  : 'Registration successful! Please check your email to verify your account.'}
               </p>
             </div>
           )}

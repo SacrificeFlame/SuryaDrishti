@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from app.core.database import get_db
 from app.core.config import settings
 from app.models.database import User, Base
-from app.models.schemas import UserRegister, UserLogin, UserResponse, Token, TokenData
+from app.models.schemas import UserRegister, UserLogin, UserResponse, Token, TokenData, DeviceOnboardingRequest
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -145,7 +145,9 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
         plan=new_user.plan,
         profile_picture=new_user.profile_picture,
         trial_start_date=new_user.trial_start_date.isoformat() if new_user.trial_start_date else None,
-        trial_end_date=new_user.trial_end_date.isoformat() if new_user.trial_end_date else None
+        trial_end_date=new_user.trial_end_date.isoformat() if new_user.trial_end_date else None,
+        solar_provider=new_user.solar_provider,
+        battery_type=new_user.battery_type
     )
 
 @router.post("/login", response_model=Token)
@@ -187,7 +189,9 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         plan=current_user.plan,
         profile_picture=current_user.profile_picture,
         trial_start_date=current_user.trial_start_date.isoformat() if current_user.trial_start_date else None,
-        trial_end_date=current_user.trial_end_date.isoformat() if current_user.trial_end_date else None
+        trial_end_date=current_user.trial_end_date.isoformat() if current_user.trial_end_date else None,
+        solar_provider=current_user.solar_provider,
+        battery_type=current_user.battery_type
     )
 
 @router.post("/upload-profile-picture")
@@ -418,4 +422,65 @@ async def reset_password(token: str, new_password: str, db: Session = Depends(ge
     logger.info(f"Password reset for user: {user.email}")
     
     return {"message": "Password reset successfully"}
+
+@router.post("/onboard-device/{user_id}", response_model=UserResponse)
+async def onboard_device(
+    user_id: int,
+    device_data: DeviceOnboardingRequest,
+    db: Session = Depends(get_db)
+):
+    """Update user device preferences (solar provider and battery type)"""
+    user = get_user_by_id(db, user_id)
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Validate solar provider
+    valid_solar_providers = ['Tata Power Solar', 'Adani Solar', 'Loom Solar']
+    if device_data.solar_provider not in valid_solar_providers:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid solar provider. Must be one of: {', '.join(valid_solar_providers)}"
+        )
+    
+    # Validate battery type
+    valid_battery_types = ['Exide', 'Luminous', 'Amaron']
+    if device_data.battery_type not in valid_battery_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid battery type. Must be one of: {', '.join(valid_battery_types)}"
+        )
+    
+    # Update user device preferences
+    user.solar_provider = device_data.solar_provider
+    user.battery_type = device_data.battery_type
+    user.updated_at = datetime.utcnow()
+    
+    try:
+        db.commit()
+        db.refresh(user)
+        logger.info(f"Device onboarded for user {user_id}: {device_data.solar_provider} + {device_data.battery_type}")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating device preferences: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update device preferences"
+        )
+    
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        is_verified=user.is_verified,
+        plan=user.plan,
+        profile_picture=user.profile_picture,
+        trial_start_date=user.trial_start_date.isoformat() if user.trial_start_date else None,
+        trial_end_date=user.trial_end_date.isoformat() if user.trial_end_date else None,
+        solar_provider=user.solar_provider,
+        battery_type=user.battery_type
+    )
 
