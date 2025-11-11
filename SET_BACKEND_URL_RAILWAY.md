@@ -116,3 +116,4 @@ If you're still having issues:
 3. Check browser console for specific error messages
 4. Make sure both services are deployed and running
 
+

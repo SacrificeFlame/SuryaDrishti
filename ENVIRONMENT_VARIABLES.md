@@ -1,169 +1,168 @@
-# Environment Variables Configuration
+# Environment Variables Guide
 
-This document describes all environment variables needed for the SuryaDrishti application.
+Complete reference for all environment variables used in SuryaDrishti.
 
 ## Backend Environment Variables
 
-### Database Configuration
+### Required Variables
 
-```bash
-# SQLite (default) - no configuration needed
-# Database file: backend/suryादrishti.db
+#### `DATABASE_URL`
+- **Description:** PostgreSQL database connection string
+- **Format:** `postgresql://user:password@host:port/database`
+- **Note:** Automatically set by Railway when you add PostgreSQL database
+- **Example:** `postgresql://postgres:password@containers-us-west-123.railway.app:5432/railway`
 
-# PostgreSQL (optional)
-DATABASE_URL=postgresql://user:password@localhost:5432/suryादrishti
-```
+#### `ALLOWED_ORIGINS`
+- **Description:** Comma-separated list of allowed CORS origins
+- **Required:** Yes
+- **Example:** `https://www.suryadrishti.in,https://suryadrishti.in,https://your-frontend.railway.app`
 
-### External API Configuration
+#### `FRONTEND_URLS`
+- **Description:** Comma-separated list of frontend URLs (alternative to ALLOWED_ORIGINS)
+- **Required:** Yes (if not using ALLOWED_ORIGINS)
+- **Example:** `https://www.suryadrishti.in,https://suryadrishti.in`
 
-```bash
-# External Forecast API (optional)
-EXTERNAL_API_URL=http://127.0.0.1:8000/api/run
-EXTERNAL_API_KEY=your_api_key_here
-```
+#### `SECRET_KEY`
+- **Description:** Secret key for JWT token generation
+- **Required:** Yes
+- **Generate:** Use a strong random string (32+ characters)
+- **Example:** `your-super-secret-key-change-in-production-12345`
 
-### Twilio SMS Configuration (for notifications)
+### Optional Variables
 
-```bash
-# Twilio Account SID (get from https://www.twilio.com/console)
-TWILIO_ACCOUNT_SID=your_account_sid_here
+#### `TWILIO_ACCOUNT_SID`
+- **Description:** Twilio account SID for SMS notifications
+- **Required:** No
+- **Example:** `ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
 
-# Twilio Auth Token (get from https://www.twilio.com/console)
-TWILIO_AUTH_TOKEN=your_auth_token_here
+#### `TWILIO_AUTH_TOKEN`
+- **Description:** Twilio authentication token
+- **Required:** No (if using Twilio)
+- **Example:** `your-twilio-auth-token`
 
-# Twilio Phone Number (format: +1234567890)
-TWILIO_FROM_NUMBER=+1234567890
-```
+#### `TWILIO_FROM_NUMBER`
+- **Description:** Twilio phone number for sending SMS
+- **Required:** No (if using Twilio)
+- **Format:** E.164 format with country code
+- **Example:** `+1234567890`
 
-**Note:** To use SMS notifications:
-1. Sign up for a Twilio account at https://www.twilio.com
-2. Get your Account SID and Auth Token from the Twilio Console
-3. Purchase a phone number or use a trial number
-4. Add these variables to your `.env` file in the `backend/` directory
+#### `DEBUG`
+- **Description:** Enable debug mode
+- **Default:** `False`
+- **Values:** `True` or `False`
 
-### Application Settings
-
-```bash
-# API Server
-API_HOST=0.0.0.0
-API_PORT=8000
-
-# CORS Origins (comma-separated)
-CORS_ORIGINS=http://localhost:3000,http://localhost:3001
-
-# Logging Level
-LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR
-```
+#### `ENVIRONMENT`
+- **Description:** Environment name
+- **Default:** `development`
+- **Values:** `development`, `production`, `staging`
 
 ## Frontend Environment Variables
 
-### API Configuration
-
-```bash
-# Backend API URL
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-```
-
-**Note:** Create a `.env.local` file in the `frontend/` directory with this variable.
-
-## Setting Up Environment Variables
-
-### Backend
-
-1. Create a `.env` file in the `backend/` directory:
-```bash
-cd backend
-touch .env
-```
-
-2. Add your environment variables:
-```bash
-# Example .env file
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=your_auth_token_here
-TWILIO_FROM_NUMBER=+1234567890
-EXTERNAL_API_URL=http://127.0.0.1:8000/api/run
-EXTERNAL_API_KEY=your_api_key_here
-```
-
-3. The backend will automatically load these variables using `python-dotenv`.
-
-### Frontend
-
-1. Create a `.env.local` file in the `frontend/` directory:
-```bash
-cd frontend
-touch .env.local
-```
-
-2. Add your environment variables:
-```bash
-# Example .env.local file
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-```
-
-3. Restart the Next.js development server for changes to take effect.
-
-## Required vs Optional
-
 ### Required Variables
-- None (all have defaults or are optional)
 
-### Optional but Recommended
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` - Required for SMS notifications
-- `NEXT_PUBLIC_API_URL` - Required if backend is not on `http://localhost:8000`
+#### `NEXT_PUBLIC_API_URL`
+- **Description:** Backend API URL (must include `/api/v1` suffix)
+- **Required:** Yes
+- **Format:** `https://your-backend-service.up.railway.app/api/v1`
+- **Current Value:** `https://beauty-aryan-back-production.up.railway.app/api/v1`
+- **Important:** 
+  - Must start with `https://`
+  - Must end with `/api/v1`
+  - Changes require frontend redeployment to take effect
 
-### Optional
-- `EXTERNAL_API_URL`, `EXTERNAL_API_KEY` - Only if using external forecast API
-- `DATABASE_URL` - Only if using PostgreSQL instead of SQLite
-- `CORS_ORIGINS` - Only if frontend is on a different origin
-- `LOG_LEVEL` - Only if you want to change logging verbosity
+### How Next.js Environment Variables Work
 
-## Security Notes
+- Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser
+- These variables are baked into the build at build time
+- Changing the variable in Railway alone is NOT enough - you MUST redeploy
+- Variables are accessible via `process.env.NEXT_PUBLIC_API_URL`
 
-⚠️ **Never commit `.env` or `.env.local` files to version control!**
+## Setting Variables in Railway
 
-These files contain sensitive information like API keys and tokens. Always add them to `.gitignore`.
+### Backend Service
+1. Go to Railway Dashboard
+2. Open your backend service
+3. Go to **Variables** tab
+4. Click **New Variable**
+5. Enter variable name and value
+6. Click **Save**
+7. Railway will automatically redeploy
 
-Example `.gitignore` entries:
+### Frontend Service
+1. Go to Railway Dashboard
+2. Open your frontend service
+3. Go to **Variables** tab
+4. Click **New Variable**
+5. Enter variable name and value
+6. Click **Save**
+7. **Important:** Manually trigger a redeploy for `NEXT_PUBLIC_*` variables
+
+## Example Configuration
+
+### Backend Service Variables
+```env
+DATABASE_URL=postgresql://... (auto-set)
+ALLOWED_ORIGINS=https://www.suryadrishti.in,https://suryadrishti.in
+FRONTEND_URLS=https://www.suryadrishti.in,https://suryadrishti.in
+SECRET_KEY=your-secret-key-here
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=your-twilio-auth-token
+TWILIO_FROM_NUMBER=+1234567890
 ```
-.env
-.env.local
-.env.*.local
-```
 
-## Testing Configuration
-
-To test if your environment variables are loaded correctly:
-
-### Backend
-```python
-# In Python shell or script
-from app.core.config import settings
-print(f"Twilio Account SID: {settings.TWILIO_ACCOUNT_SID}")
-```
-
-### Frontend
-```typescript
-// In browser console or component
-console.log('API URL:', process.env.NEXT_PUBLIC_API_URL);
+### Frontend Service Variables
+```env
+NEXT_PUBLIC_API_URL=https://beauty-aryan-back-production.up.railway.app/api/v1
 ```
 
 ## Troubleshooting
 
-### Backend can't find environment variables
-- Make sure `.env` file is in the `backend/` directory
-- Check that variable names match exactly (case-sensitive)
-- Restart the backend server after adding/changing variables
+### Variable Not Working
+1. **Check variable name:** Must match exactly (case-sensitive)
+2. **Check variable value:** No extra spaces or quotes
+3. **Redeploy service:** Changes require redeployment
+4. **Check logs:** Verify variable is being read correctly
 
-### Frontend can't connect to backend
-- Check that `NEXT_PUBLIC_API_URL` is set correctly
-- Make sure the backend is running on the specified port
-- Check browser console for CORS errors
+### NEXT_PUBLIC_API_URL Not Updating
+1. **Redeploy frontend:** Next.js bakes variables at build time
+2. **Clear browser cache:** Old builds may be cached
+3. **Check build logs:** Verify variable is included in build
+4. **Verify format:** Must be valid URL with `/api/v1` suffix
 
-### SMS notifications not working
-- Verify Twilio credentials are correct
-- Check that phone numbers are in E.164 format (+1234567890)
-- Check backend logs for Twilio API errors
-- Ensure you have sufficient Twilio credits
+### CORS Errors
+1. **Check ALLOWED_ORIGINS:** Must include your frontend domain
+2. **Check FRONTEND_URLS:** Alternative way to set allowed origins
+3. **Redeploy backend:** CORS changes require backend redeployment
+4. **Verify format:** Comma-separated, no spaces around commas
 
+## Security Best Practices
+
+1. **Never commit secrets:** Use environment variables, not hardcoded values
+2. **Use strong SECRET_KEY:** Generate a random 32+ character string
+3. **Rotate secrets regularly:** Change SECRET_KEY periodically
+4. **Limit ALLOWED_ORIGINS:** Only include domains you own
+5. **Use HTTPS:** Always use `https://` in production
+
+## Generating SECRET_KEY
+
+### Python
+```python
+import secrets
+print(secrets.token_urlsafe(32))
+```
+
+### Node.js
+```javascript
+require('crypto').randomBytes(32).toString('base64url')
+```
+
+### Online
+Use a secure random string generator (32+ characters)
+
+## Need Help?
+
+- Check Railway service logs
+- Verify variable names and values
+- Test backend API directly
+- Check browser console for errors
+- Review deployment guide for setup instructions

@@ -81,8 +81,9 @@ export default function CloudMovementMap({ cloudData, location }: CloudMovementM
   }, [cloudData]);
 
   const maxMotion = Math.max(...motionStats, 1);
-
-  const maxCloudCount = Math.max(cloudStats.clear, cloudStats.thin, cloudStats.thick, cloudStats.storm, 1);
+  
+  // Check if motion stats has any data
+  const hasMotionData = motionStats.some(count => count > 0);
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 card-hover">
@@ -118,7 +119,7 @@ export default function CloudMovementMap({ cloudData, location }: CloudMovementM
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full transition-all duration-300"
-                style={{ width: `${(cloudStats.clear / maxCloudCount) * 100}%` }}
+                style={{ width: `${(cloudStats.clear / cloudStats.total) * 100}%` }}
               ></div>
             </div>
           </div>
@@ -135,7 +136,7 @@ export default function CloudMovementMap({ cloudData, location }: CloudMovementM
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-slate-300 to-slate-400 rounded-full transition-all duration-300"
-                style={{ width: `${(cloudStats.thin / maxCloudCount) * 100}%` }}
+                style={{ width: `${(cloudStats.thin / cloudStats.total) * 100}%` }}
               ></div>
             </div>
           </div>
@@ -152,7 +153,7 @@ export default function CloudMovementMap({ cloudData, location }: CloudMovementM
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-slate-500 to-slate-600 rounded-full transition-all duration-300"
-                style={{ width: `${(cloudStats.thick / maxCloudCount) * 100}%` }}
+                style={{ width: `${(cloudStats.thick / cloudStats.total) * 100}%` }}
               ></div>
             </div>
           </div>
@@ -169,7 +170,7 @@ export default function CloudMovementMap({ cloudData, location }: CloudMovementM
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-slate-700 to-slate-800 rounded-full transition-all duration-300"
-                style={{ width: `${(cloudStats.storm / maxCloudCount) * 100}%` }}
+                style={{ width: `${(cloudStats.storm / cloudStats.total) * 100}%` }}
               ></div>
             </div>
           </div>
@@ -177,7 +178,7 @@ export default function CloudMovementMap({ cloudData, location }: CloudMovementM
       </div>
 
       {/* Motion Speed Distribution Bar Chart */}
-      {motionStats.length > 0 && (
+      {hasMotionData && (
         <div>
           <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Cloud Motion Speed Distribution</h3>
           <div className="h-48 flex items-end justify-between gap-1">

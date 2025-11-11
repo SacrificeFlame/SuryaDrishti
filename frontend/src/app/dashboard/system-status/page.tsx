@@ -103,7 +103,11 @@ function SystemStatusContent() {
                 </div>
               </div>
             ) : systemStatus ? (
-              <SystemStatus status={systemStatus} />
+              <SystemStatus 
+                status={systemStatus} 
+                microgridId={DEFAULT_MICROGRID_ID}
+                onStatusUpdate={loadStatus}
+              />
             ) : (
               <div className="text-center py-12">
                 <p className="text-slate-600 dark:text-slate-400">No system status data available</p>

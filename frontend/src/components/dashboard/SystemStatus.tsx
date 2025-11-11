@@ -1,13 +1,50 @@
 'use client';
 
+import { useState } from 'react';
 import { SystemStatus as SystemStatusType } from '@/types/forecast';
-import { Battery, Zap, Sun, Activity, Clock } from 'lucide-react';
+import { Battery, Zap, Sun, Activity, Clock, Power } from 'lucide-react';
+import { getApiUrlRuntime } from '@/lib/get-api-url';
 
 interface SystemStatusProps {
   status: SystemStatusType;
+  microgridId?: string;
+  onStatusUpdate?: () => void;
 }
 
-export default function SystemStatus({ status }: SystemStatusProps) {
+export default function SystemStatus({ status, microgridId = 'microgrid_001', onStatusUpdate }: SystemStatusProps) {
+  const [toggling, setToggling] = useState(false);
+  
+  const handleToggleGenerator = async () => {
+    if (toggling) return;
+    
+    const newStatus = status.diesel_status === 'off' || status.diesel_status === 'standby' ? 'on' : 'off';
+    
+    setToggling(true);
+    try {
+      const apiUrl = getApiUrlRuntime();
+      const response = await fetch(`${apiUrl}/microgrid/${microgridId}/status/diesel?status=${newStatus}`, {
+        method: 'PUT',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update generator status');
+      }
+      
+      // Refresh status
+      if (onStatusUpdate) {
+        onStatusUpdate();
+      } else {
+        // Reload page to refresh status
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Failed to toggle generator:', error);
+      alert('Failed to toggle generator. Please try again.');
+    } finally {
+      setToggling(false);
+    }
+  };
+  
   const getStatusColor = (dieselStatus: string) => {
     switch (dieselStatus) {
       case 'running':
@@ -73,13 +110,27 @@ export default function SystemStatus({ status }: SystemStatusProps) {
             </div>
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Diesel Generator</span>
           </div>
-          <span
-            className={`px-3 py-1 rounded-lg text-xs font-semibold uppercase border ${getStatusColor(
-              status.diesel_status
-            )}`}
-          >
-            {status.diesel_status}
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className={`px-3 py-1 rounded-lg text-xs font-semibold uppercase border ${getStatusColor(
+                status.diesel_status
+              )}`}
+            >
+              {status.diesel_status}
+            </span>
+            <button
+              onClick={handleToggleGenerator}
+              disabled={toggling}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                status.diesel_status === 'off' || status.diesel_status === 'standby'
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-red-600 hover:bg-red-700 text-white'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <Power className="w-3 h-3" />
+              {toggling ? '...' : status.diesel_status === 'off' || status.diesel_status === 'standby' ? 'Turn On' : 'Turn Off'}
+            </button>
+          </div>
         </div>
       </div>
 

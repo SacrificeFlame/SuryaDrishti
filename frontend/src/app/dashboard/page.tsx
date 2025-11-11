@@ -301,11 +301,13 @@ function DashboardContent() {
           });
         }
 
-        // Transform alerts
+        // Transform alerts - filter out acknowledged ones
         if (alertsResponse.status === 'fulfilled') {
           const alertsData = alertsResponse.value;
           setAlerts(
-            alertsData.map((alert) => ({
+            alertsData
+              .filter((alert) => !alert.acknowledged) // Only show unacknowledged alerts
+              .map((alert) => ({
               id: alert.id,
               severity: alert.severity as 'info' | 'warning' | 'critical' | 'success',
               message: alert.message,

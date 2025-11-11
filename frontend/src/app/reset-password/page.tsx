@@ -132,8 +132,9 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="input-field"
                 style={{ paddingLeft: '3rem', paddingRight: '2.5rem' }}
-                placeholder="Minimum 8 characters"
+                placeholder="8-72 characters"
                 minLength={8}
+                maxLength={72}
                 required
               />
               <button

@@ -104,7 +104,7 @@ async def get_energy_loss_report(
                 'battery_cycles_saved': round(battery_cycles_saved, 1),
                 'alerts_triggered': len(alerts),
                 'forecast_accuracy_percent': round(
-                    (1 - abs(total_forecast_energy - total_actual_energy) / max(total_forecast_energy, 1)) * 100,
+                    max(0, min(100, (1 - abs(total_forecast_energy - total_actual_energy) / max(total_forecast_energy, total_actual_energy, 1)) * 100)),
                     1
                 )
             },
@@ -176,6 +176,9 @@ async def get_performance_report(
     except Exception as e:
         logger.error(f"Error generating performance report: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
+
+
+
 
 
 

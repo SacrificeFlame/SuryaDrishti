@@ -102,7 +102,7 @@ class AlertAcknowledge(BaseModel):
 class UserRegister(BaseModel):
     email: str = Field(..., description="User email address")
     username: str = Field(..., min_length=3, max_length=50, description="Username")
-    password: str = Field(..., min_length=8, description="Password (min 8 characters)")
+    password: str = Field(..., min_length=8, max_length=72, description="Password (8-72 characters)")
 
 class UserLogin(BaseModel):
     email_or_username: str = Field(..., description="Email or username")

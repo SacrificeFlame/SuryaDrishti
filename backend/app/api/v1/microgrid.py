@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.schemas import MicrogridInfo, SystemStatus
@@ -122,6 +122,43 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Error getting system status for {microgrid_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+@router.put("/{microgrid_id}/status/diesel")
+async def update_diesel_status(
+    microgrid_id: str,
+    status: str = Query(..., description="Generator status: 'on', 'off', 'standby', or 'running'"),
+    db: Session = Depends(get_db)
+):
+    """
+    Update diesel generator status.
+    """
+    try:
+        microgrid = db.query(Microgrid).filter(Microgrid.id == microgrid_id).first()
+        if not microgrid:
+            raise HTTPException(status_code=404, detail=f"Microgrid {microgrid_id} not found")
+        
+        # Validate status
+        if status not in ['on', 'off', 'standby', 'running']:
+            raise HTTPException(status_code=400, detail="Invalid status. Must be 'on', 'off', 'standby', or 'running'")
+        
+        # Map 'on' to 'running' for consistency
+        mapped_status = 'running' if status == 'on' else status
+        
+        # In a real system, this would control the actual generator
+        # For now, we'll just return success
+        logger.info(f"Diesel generator status updated for {microgrid_id}: {mapped_status}")
+        
+        return {
+            "status": "success",
+            "microgrid_id": microgrid_id,
+            "diesel_status": mapped_status,
+            "message": f"Diesel generator set to {mapped_status}"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating diesel status for {microgrid_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to update diesel status: {str(e)}")
 
 @router.get("/", response_model=List[MicrogridInfo])
 async def list_microgrids(db: Session = Depends(get_db)):

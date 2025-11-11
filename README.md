@@ -1,140 +1,131 @@
-# SuryaDrishti ☀️ - Real-Time Solar Forecasting System
+# SuryaDrishti - Solar Forecasting Dashboard
 
-**Solar power forecasting for rural Indian microgrids using satellite imagery and ML**
+Real-time solar forecasting and energy management dashboard for rural microgrids.
 
-![Status](https://img.shields.io/badge/status-active-success.svg)
-![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-
-## Overview
-
-SuryaDrishti is a real-time solar forecasting system that predicts solar power fluctuations by tracking cloud movements using satellite imagery and machine learning. It helps optimize energy management for rural microgrids in India.
-
-### Key Features
-
-- **Real-time Forecasting** - 60-minute ahead predictions with 5-minute resolution
-- **Cloud Tracking** - AI-powered cloud detection and motion tracking
-- **Probabilistic Forecasts** - P10/P50/P90 quantile predictions
-- **Smart Alerts** - Automatic alerts for power drops
-- **Battery Scheduling** - Optimized charging/discharging schedules
-- **Interactive Dashboard** - Real-time monitoring and visualization
-
-## Tech Stack
-
-**Backend:** FastAPI, PyTorch, OpenCV, SQLAlchemy, PostgreSQL, Redis, Celery
-
-**Frontend:** Next.js 14, TailwindCSS, Recharts, Leaflet
-
-**ML Models:** U-Net (cloud segmentation), Optical Flow (motion tracking), Physics-Informed NN (irradiance forecasting)
-
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- Python 3.11+
-- Node.js 18+
+- Node.js 18+ (for frontend)
+- Python 3.11+ (for backend)
 - PostgreSQL (for production)
-- Redis (for Celery)
+- Railway account (for deployment)
 
-### Installation
+### Local Development
 
-1. **Clone the repository**
-```bash
-git clone https://github.com/yourorg/suryadrishti.git
-cd suryadrishti
-```
-
-2. **Set up backend**
+#### Backend
 ```bash
 cd backend
 pip install -r requirements.txt
-python init_db.py
+uvicorn app.main:app --reload --port 8000
 ```
 
-3. **Set up frontend**
+#### Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-4. **Start the backend**
-```bash
-cd backend
-uvicorn app.main:app --reload
+Visit `http://localhost:3000`
+
+## 📦 Deployment on Railway
+
+### Backend Service
+1. Create a new Railway service from GitHub repo
+2. Set **Root Directory** to: `backend`
+3. Add PostgreSQL database
+4. Set environment variables (see [Environment Variables](#environment-variables))
+5. Deploy
+
+### Frontend Service
+1. Create a new Railway service from the same GitHub repo
+2. Set **Root Directory** to: `frontend`
+3. Set environment variables:
+   - `NEXT_PUBLIC_API_URL=https://your-backend-service.up.railway.app/api/v1`
+4. Deploy
+
+### Custom Domain Setup
+- Frontend: Configure custom domain in Railway (e.g., `www.suryadrishti.in`)
+- Backend: Ensure CORS allows your frontend domain
+
+## 🔧 Environment Variables
+
+### Backend
+```env
+DATABASE_URL=postgresql://... (auto-set by Railway)
+ALLOWED_ORIGINS=https://www.suryadrishti.in,https://suryadrishti.in
+FRONTEND_URLS=https://www.suryadrishti.in,https://suryadrishti.in
+SECRET_KEY=your-secret-key
+TWILIO_ACCOUNT_SID=your-twilio-sid (optional)
+TWILIO_AUTH_TOKEN=your-twilio-token (optional)
+TWILIO_FROM_NUMBER=+1234567890 (optional)
 ```
 
-The API will be available at `http://localhost:8000`  
-The dashboard will be available at `http://localhost:3000`
+### Frontend
+```env
+NEXT_PUBLIC_API_URL=https://beauty-aryan-back-production.up.railway.app/api/v1
+```
 
-## API Documentation
+**Important:** After changing `NEXT_PUBLIC_API_URL`, you MUST redeploy the frontend service for changes to take effect.
 
-Interactive API docs available at `http://localhost:8000/docs`
+## 📚 Documentation
 
-## Deployment
+### Setup Guides
+- [Railway Deployment Guide](DEPLOYMENT_GUIDE.md)
+- [Backend URL Configuration](SET_BACKEND_URL_RAILWAY.md)
+- [Environment Variables](ENVIRONMENT_VARIABLES.md)
 
-### Railway Deployment
+### API Documentation
+- API endpoints are documented at: `https://your-backend-url/docs` (Swagger UI)
+- See [API Endpoints Reference](API_ENDPOINTS_REFERENCE.md)
 
-1. Create a Railway account and new project
-2. Connect your GitHub repository
-3. Create two services:
-   - **Backend:** Set root directory to `backend`
-   - **Frontend:** Set root directory to `frontend`
-4. Add PostgreSQL database to backend service
-5. Set environment variables (see `PRODUCTION_SETUP.md`)
-6. Deploy!
-
-See [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) for detailed deployment instructions.
-
-## Environment Variables
-
-**Backend:**
-- `DATABASE_URL` - PostgreSQL connection string
-- `REDIS_URL` - Redis connection string
-- `SECRET_KEY` - Application secret key
-- `ALLOWED_ORIGINS` - CORS allowed origins
-
-**Frontend:**
-- `NEXT_PUBLIC_API_URL` - Backend API URL
-
-See `.env.example` for full list of variables.
-
-## Project Structure
+## 🏗️ Project Structure
 
 ```
-suryadrishti/
 ├── backend/          # FastAPI backend
+│   ├── app/         # Application code
+│   ├── scripts/     # Database scripts
+│   └── requirements.txt
 ├── frontend/         # Next.js frontend
-├── data/            # ML models and training data
-├── scripts/         # Utility scripts
-└── docs/            # Documentation
+│   ├── src/         # Source code
+│   └── package.json
+└── README.md
 ```
 
-## Production Features
+## 🔑 Key Features
 
-- Strong SECRET_KEY generation
-- PostgreSQL/TimescaleDB support
-- Redis for Celery
-- CORS configuration
-- Monitoring (Prometheus + Grafana)
-- SSL/TLS support
-- Automated backups
+- Real-time solar forecasting
+- Energy scheduling and optimization
+- Device management
+- Alerts and notifications
+- Performance metrics and reports
+- User authentication
+- Dark mode support
 
-## Roadmap
+## 🛠️ Technology Stack
 
-- [x] Backend API with FastAPI
-- [x] ML models (Cloud segmentation + Forecasting)
-- [x] Next.js dashboard
-- [x] WebSocket real-time updates
-- [x] Battery scheduling
-- [x] Real satellite data integration
+### Backend
+- FastAPI
+- PostgreSQL
+- SQLAlchemy
+- Celery (task queue)
+- Pydantic
 
-## License
+### Frontend
+- Next.js 14
+- React
+- TypeScript
+- Tailwind CSS
+- Lucide Icons
 
-MIT License - see [LICENSE](LICENSE) file
+## 📝 License
 
-## Contact
+MIT License
 
-- **Website:** suryadrishti.in
+## 🤝 Contributing
 
----
+Contributions are welcome! Please open an issue or submit a pull request.
+
+## 📞 Support
+
+For issues or questions, please open an issue on GitHub.

@@ -258,8 +258,6 @@ function SchedulePageContent() {
                     </div>
                   </div>
                   <div className="w-48">
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Power Source</div>
-                    <div className={`w-16 h-4 rounded ${getPowerSourceColor(slot)}`}></div>
                     {slot.devices.length > 0 && (
                       <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 space-y-1">
                         <div className="font-medium">Active Devices:</div>
