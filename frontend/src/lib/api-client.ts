@@ -80,6 +80,7 @@ export interface SystemStatusResponse {
     critical: number;
     nonCritical: number;
   };
+  solar_generation_kw?: number;
   timestamp: string;
   recent_actions: Array<{
     action: string;
@@ -524,15 +525,28 @@ export async function sendTestNotification(microgridId: string): Promise<{ statu
 // Alert APIs
 export async function acknowledgeAlert(alertId: number, acknowledged: boolean = true): Promise<{ status: string; alert_id: number; acknowledged: boolean }> {
   const apiUrl = getApiUrlRuntime();
-  const response = await fetch(`${apiUrl}/alerts/${alertId}/acknowledge`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ acknowledged }),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to acknowledge alert: ${response.status}`);
+  try {
+    const response = await fetch(`${apiUrl}/alerts/${alertId}/acknowledge`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ acknowledged: acknowledged }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Alert acknowledgment failed: ${response.status} - ${errorText}`);
+      throw new Error(`Failed to acknowledge alert: ${response.status} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error acknowledging alert:', error);
+    throw error;
   }
-  return response.json();
 }
 
 // Report APIs

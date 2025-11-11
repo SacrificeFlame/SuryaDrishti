@@ -82,18 +82,38 @@ async def get_alerts(microgrid_id: str, limit: int = 20, db: Session = Depends(g
         return []
 
 @router.post("/{alert_id}/acknowledge")
-async def acknowledge_alert(alert_id: int, data: AlertAcknowledge, db: Session = Depends(get_db)):
+async def acknowledge_alert(
+    alert_id: int, 
+    data: AlertAcknowledge,
+    db: Session = Depends(get_db)
+):
     """
     Acknowledge an alert.
     """
-    alert = db.query(Alert).filter(Alert.id == alert_id).first()
-    if not alert:
-        raise HTTPException(status_code=404, detail="Alert not found")
-    
-    alert.acknowledged = 1 if data.acknowledged else 0
-    db.commit()
-    
-    return {"status": "success", "alert_id": alert_id, "acknowledged": data.acknowledged}
+    try:
+        alert = db.query(Alert).filter(Alert.id == alert_id).first()
+        if not alert:
+            raise HTTPException(status_code=404, detail="Alert not found")
+        
+        acknowledged = data.acknowledged
+        
+        alert.acknowledged = 1 if acknowledged else 0
+        db.commit()
+        db.refresh(alert)
+        
+        logger.info(f"Alert {alert_id} acknowledged: {acknowledged}")
+        
+        return {
+            "status": "success", 
+            "alert_id": alert_id, 
+            "acknowledged": acknowledged
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error acknowledging alert {alert_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to acknowledge alert: {str(e)}")
 
 @router.post("/create")
 async def create_alert(microgrid_id: str, severity: str, message: str, 

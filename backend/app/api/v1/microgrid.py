@@ -67,16 +67,41 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
             SensorReading.microgrid_id == microgrid_id
         ).order_by(SensorReading.timestamp.desc()).first()
         
+        # Calculate solar generation - always ensure it's positive when there's irradiance
+        solar_generation_kw = 0.0
+        if latest_reading:
+            if latest_reading.power_output and latest_reading.power_output > 0:
+                # Use actual power output if available and positive
+                solar_generation_kw = latest_reading.power_output
+            elif latest_reading.irradiance and latest_reading.irradiance > 0:
+                # Calculate from irradiance if power_output is 0 or None
+                # Simple calculation: irradiance (W/m²) * area (m²) * efficiency / 1000
+                # Assume panel area based on capacity (roughly 6.5 m² per kW for typical panels)
+                panel_area_m2 = microgrid.capacity_kw * 6.5
+                efficiency = 0.20  # 20% panel efficiency
+                solar_generation_kw = (latest_reading.irradiance * panel_area_m2 * efficiency) / 1000.0
+                # Cap at capacity
+                solar_generation_kw = min(solar_generation_kw, microgrid.capacity_kw)
+            # If no irradiance data, assume minimal generation during day (or 0 at night)
+            else:
+                # Check if it's daytime (simplified - you might want to use actual timezone/location)
+                from datetime import datetime
+                current_hour = datetime.utcnow().hour
+                # Assume daytime is 6 AM to 6 PM UTC (adjust based on location)
+                if 6 <= current_hour < 18:
+                    # Minimal generation during day if no data
+                    solar_generation_kw = microgrid.capacity_kw * 0.1  # 10% of capacity
+        
         # Get real battery SOC from latest reading or use default
         battery_soc = 50.0
         battery_voltage = 48.0
         battery_current = 0.0
         
         if latest_reading:
-            # Estimate SOC from power output (simplified)
-            if latest_reading.power_output > 0:
+            # Estimate SOC from solar generation and power output
+            if solar_generation_kw > 0:
                 battery_current = -5.0  # Charging
-                battery_soc = min(95.0, 50.0 + (latest_reading.power_output / microgrid.capacity_kw) * 10)
+                battery_soc = min(95.0, 50.0 + (solar_generation_kw / microgrid.capacity_kw) * 10)
             else:
                 battery_current = 2.0  # Discharging
                 battery_soc = max(20.0, 50.0 - 5.0)
@@ -93,6 +118,19 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
         critical_load = sum(d.power_consumption_watts or 0 for d in devices if d.device_type == 'essential') / 1000.0
         non_critical_load = total_load - critical_load
         
+        # Get diesel generator status from SystemConfiguration
+        from app.models.database import SystemConfiguration
+        config = db.query(SystemConfiguration).filter(
+            SystemConfiguration.microgrid_id == microgrid_id
+        ).first()
+        
+        diesel_status = 'off'
+        if config and hasattr(config, 'generator_status') and config.generator_status:
+            diesel_status = config.generator_status
+        else:
+            # Default to 'off' if no config exists
+            diesel_status = 'off'
+        
         return SystemStatus(
             battery={
                 'soc': battery_soc,
@@ -100,19 +138,20 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
                 'current': battery_current
             },
             diesel={
-                'status': 'off',
+                'status': diesel_status,
                 'fuelLevel': 80.0  # Default - should come from actual controller
             },
             loads={
                 'critical': critical_load,
                 'nonCritical': non_critical_load
             },
+            solar_generation_kw=solar_generation_kw,
             timestamp=datetime.utcnow(),
             recent_actions=[
                 {
                     'action': 'System operational',
                     'timestamp': datetime.utcnow().isoformat(),
-                    'details': f'Solar: {latest_reading.power_output if latest_reading else 0:.2f}kW, Load: {total_load:.2f}kW'
+                    'details': f'Solar: {solar_generation_kw:.2f}kW, Load: {total_load:.2f}kW'
                 }
             ],
             uptime_hours=uptime_hours
@@ -144,8 +183,26 @@ async def update_diesel_status(
         # Map 'on' to 'running' for consistency
         mapped_status = 'running' if status == 'on' else status
         
-        # In a real system, this would control the actual generator
-        # For now, we'll just return success
+        # Store diesel status in SystemConfiguration
+        from app.models.database import SystemConfiguration
+        config = db.query(SystemConfiguration).filter(
+            SystemConfiguration.microgrid_id == microgrid_id
+        ).first()
+        
+        if not config:
+            # Create configuration if it doesn't exist
+            config = SystemConfiguration(
+                microgrid_id=microgrid_id,
+                generator_status=mapped_status
+            )
+            db.add(config)
+        else:
+            # Update existing configuration
+            config.generator_status = mapped_status
+        
+        db.commit()
+        db.refresh(config)
+        
         logger.info(f"Diesel generator status updated for {microgrid_id}: {mapped_status}")
         
         return {
@@ -157,6 +214,7 @@ async def update_diesel_status(
     except HTTPException:
         raise
     except Exception as e:
+        db.rollback()
         logger.error(f"Error updating diesel status for {microgrid_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to update diesel status: {str(e)}")
 

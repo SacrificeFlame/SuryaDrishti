@@ -54,7 +54,7 @@ export default function ForecastSchedule({ data, location, loading }: ForecastSc
     <div className="space-y-6">
       {/* Meta Information */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors duration-300">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Location</div>
             <div className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -71,12 +71,6 @@ export default function ForecastSchedule({ data, location, loading }: ForecastSc
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">SOC Target</div>
             <div className="text-lg font-semibold text-yellow-600">
               {data.soc_target ? (data.soc_target * 100).toFixed(0) : 'N/A'}%
-            </div>
-          </div>
-          <div>
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Data Source</div>
-            <div className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
-              {data.meta?.source || 'unknown'}
             </div>
           </div>
         </div>

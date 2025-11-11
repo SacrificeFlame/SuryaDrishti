@@ -34,8 +34,15 @@ function SystemStatusContent() {
 
       if (statusResponse.status === 'fulfilled') {
         const status = statusResponse.value;
-        const solarGen = latestSensor.status === 'fulfilled' ? latestSensor.value.power_output : 0;
         const totalLoad = status.loads.critical + status.loads.nonCritical;
+        // Use solar_generation_kw from backend if available, otherwise calculate from sensor
+        const solarGen = status.solar_generation_kw !== undefined && status.solar_generation_kw !== null
+          ? status.solar_generation_kw
+          : (latestSensor.status === 'fulfilled' && latestSensor.value.power_output > 0
+            ? latestSensor.value.power_output
+            : (latestSensor.status === 'fulfilled' && latestSensor.value.irradiance > 0
+              ? Math.min(latestSensor.value.irradiance * 0.0065, 50) // Rough estimate
+              : 5.0)); // Default to 5kW during day if no data
         
         setSystemStatus({
           battery_soc: status.battery.soc,

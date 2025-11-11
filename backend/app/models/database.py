@@ -167,6 +167,7 @@ class SystemConfiguration(Base):
     generator_fuel_cost_per_liter = Column(Float, default=80.0)  # Cost per liter
     generator_min_runtime_minutes = Column(Integer, default=30)  # Minimum runtime
     generator_max_power_kw = Column(Float, default=20.0)  # Max generator power
+    generator_status = Column(String, default='off')  # 'off', 'standby', 'running'
     
     # Optimization preferences
     optimization_mode = Column(String, default='cost')  # 'cost', 'battery_longevity', 'grid_independence'

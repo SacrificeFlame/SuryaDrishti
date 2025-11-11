@@ -87,8 +87,8 @@ async def startup_event():
                 # Create sensor reading
                 sensor_reading = SensorReading(
                     microgrid_id='microgrid_001',
-                    irradiance=850.0,
-                    power_output=40.0,
+                    irradiance=850.0,  # Good irradiance during day
+                    power_output=42.5,  # Solar panels generating power (85% of 50kW capacity)
                     temperature=32.0,
                     humidity=45.0,
                     wind_speed=3.5,
@@ -131,6 +131,7 @@ async def startup_event():
                         generator_fuel_consumption_l_per_kwh=0.25,
                         generator_min_runtime_minutes=30,
                         generator_max_power_kw=20.0,
+                        generator_status='off',
                         optimization_mode='cost',
                         safety_margin_critical_loads=0.1
                     )

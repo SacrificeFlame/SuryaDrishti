@@ -59,6 +59,7 @@ class SystemStatus(BaseModel):
     battery: Dict[str, float]  # {soc, voltage, current}
     diesel: Dict[str, Any]  # {status, fuelLevel}
     loads: Dict[str, float]  # {critical, nonCritical}
+    solar_generation_kw: Optional[float] = None  # Solar generation in kW
     timestamp: datetime
     recent_actions: List[Dict[str, Any]]
     uptime_hours: Optional[float] = None  # System uptime in hours

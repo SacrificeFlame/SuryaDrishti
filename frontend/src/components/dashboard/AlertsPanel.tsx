@@ -18,13 +18,21 @@ export default function AlertsPanel({ alerts, onAlertAcknowledged }: AlertsPanel
     
     setAcknowledging(prev => new Set(prev).add(alertId));
     try {
-      await acknowledgeAlert(alertId, true);
+      const result = await acknowledgeAlert(alertId, true);
+      console.log('Alert acknowledged successfully:', result);
+      
+      // Remove alert from local state immediately for better UX
       if (onAlertAcknowledged) {
         onAlertAcknowledged(alertId);
+      } else {
+        // If no callback, we rely on parent to refresh alerts
+        // For now, just log success
+        console.log('Alert acknowledged, parent should refresh');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to acknowledge alert:', error);
-      alert('Failed to acknowledge alert. Please try again.');
+      const errorMessage = error?.message || 'Failed to acknowledge alert. Please try again.';
+      alert(errorMessage);
     } finally {
       setAcknowledging(prev => {
         const next = new Set(prev);

@@ -30,12 +30,26 @@ export default function SystemStatus({ status, microgridId = 'microgrid_001', on
         throw new Error('Failed to update generator status');
       }
       
+      // Refresh status - wait a bit for backend to update
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Refresh status
       if (onStatusUpdate) {
         onStatusUpdate();
       } else {
-        // Reload page to refresh status
-        window.location.reload();
+        // Try to reload status without full page reload
+        try {
+          const refreshResponse = await fetch(`${apiUrl}/microgrid/${microgridId}/status`);
+          if (refreshResponse.ok) {
+            const newStatus = await refreshResponse.json();
+            // Update local state if possible, otherwise reload
+            window.location.reload();
+          } else {
+            window.location.reload();
+          }
+        } catch {
+          window.location.reload();
+        }
       }
     } catch (error) {
       console.error('Failed to toggle generator:', error);

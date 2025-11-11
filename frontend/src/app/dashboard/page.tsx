@@ -288,7 +288,14 @@ function DashboardContent() {
         if (statusResponse.status === 'fulfilled') {
           const status = statusResponse.value;
           const totalLoad = status.loads.critical + status.loads.nonCritical;
-          const solarGen = latestSensor.status === 'fulfilled' ? latestSensor.value.power_output : 0;
+          // Use solar_generation_kw from backend if available, otherwise calculate from sensor
+          const solarGen = status.solar_generation_kw !== undefined && status.solar_generation_kw !== null
+            ? status.solar_generation_kw
+            : (latestSensor.status === 'fulfilled' && latestSensor.value.power_output > 0
+              ? latestSensor.value.power_output
+              : (latestSensor.status === 'fulfilled' && latestSensor.value.irradiance > 0
+                ? Math.min(latestSensor.value.irradiance * 0.0065, 50) // Rough estimate: irradiance * area factor
+                : 5.0)); // Default to 5kW during day if no data
           
           setSystemStatus({
             battery_soc: status.battery.soc,
@@ -627,8 +634,27 @@ function DashboardContent() {
                   <div>
                     <AlertsPanel 
                       alerts={alerts} 
-                      onAlertAcknowledged={(alertId) => {
-                        setAlerts(alerts.map(a => a.id === alertId ? { ...a, acknowledged: true } : a));
+                      onAlertAcknowledged={async (alertId) => {
+                        // Remove acknowledged alert from the list immediately
+                        setAlerts(prevAlerts => prevAlerts.filter(a => a.id !== alertId));
+                        // Optionally refresh alerts from server to ensure consistency
+                        try {
+                          const { getAlerts } = await import('@/lib/api-client');
+                          const refreshedAlerts = await getAlerts(DEFAULT_MICROGRID_ID, 20);
+                          setAlerts(
+                            refreshedAlerts
+                              .filter((alert) => !alert.acknowledged)
+                              .map((alert) => ({
+                                id: alert.id,
+                                severity: alert.severity as 'info' | 'warning' | 'critical' | 'success',
+                                message: alert.message,
+                                timestamp: alert.timestamp,
+                                action: alert.action_taken,
+                              }))
+                          );
+                        } catch (error) {
+                          console.error('Failed to refresh alerts:', error);
+                        }
                       }}
                     />
                   </div>

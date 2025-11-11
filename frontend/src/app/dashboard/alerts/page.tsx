@@ -54,10 +54,15 @@ function AlertsContent() {
 
   const handleAcknowledge = async (alertId: number) => {
     try {
-      await acknowledgeAlert(alertId, true);
-      setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, acknowledged: true } : a));
-    } catch (err) {
+      const result = await acknowledgeAlert(alertId, true);
+      console.log('Alert acknowledged successfully:', result);
+      // Remove acknowledged alert from the list
+      setAlerts(prev => prev.filter(a => a.id !== alertId));
+      // Refresh alerts to get updated list
+      await loadAlerts();
+    } catch (err: any) {
       console.error('Failed to acknowledge alert:', err);
+      alert(err?.message || 'Failed to acknowledge alert. Please try again.');
     }
   };
 
