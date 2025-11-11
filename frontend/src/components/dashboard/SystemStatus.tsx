@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { SystemStatus as SystemStatusType } from '@/types/forecast';
 import { Battery, Zap, Sun, Activity, Clock, Power } from 'lucide-react';
-import { getApiUrlRuntime } from '@/lib/get-api-url';
+import { getApiUrl } from '@/lib/get-api-url';
 
 interface SystemStatusProps {
   status: SystemStatusType;
@@ -21,7 +21,7 @@ export default function SystemStatus({ status, microgridId = 'microgrid_001', on
     
     setToggling(true);
     try {
-      const apiUrl = getApiUrlRuntime();
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/microgrid/${microgridId}/status/diesel?status=${newStatus}`, {
         method: 'PUT',
       });
