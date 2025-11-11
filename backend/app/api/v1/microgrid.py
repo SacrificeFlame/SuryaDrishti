@@ -7,6 +7,7 @@ from typing import List
 from datetime import datetime
 import random
 import logging
+import traceback
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -136,9 +137,12 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
         except Exception as e:
             logger.error(f"Error calculating solar generation: {e}", exc_info=True)
             # Use default
-            current_hour = datetime.utcnow().hour
-            if 6 <= current_hour < 18:
-                solar_generation_kw = capacity_kw * 0.15
+            try:
+                current_hour = datetime.utcnow().hour
+                if 6 <= current_hour < 18:
+                    solar_generation_kw = capacity_kw * 0.15
+            except:
+                solar_generation_kw = capacity_kw * 0.15  # Default to 15% if datetime fails
         
         # Get real battery SOC from latest reading or use default
         # Always ensure battery SOC is a reasonable value (between 25% and 95%)
