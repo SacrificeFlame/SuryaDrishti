@@ -19,51 +19,116 @@ interface SolarPanelsVisualizationProps {
   longitude?: number;
 }
 
-// Calculate sunrise and sunset times for a given date and location
-function calculateSunriseSunset(lat: number, lon: number, date: Date): { sunrise: Date; sunset: Date } {
-  // Convert latitude and longitude to radians
+// Calculate sunrise and sunset times for a given date and location in IST
+// Returns times as { hour, minute } objects in IST
+function calculateSunriseSunset(lat: number, lon: number, date: Date): { sunrise: { hour: number; minute: number }; sunset: { hour: number; minute: number } } {
+  // Convert latitude to radians
   const latRad = (lat * Math.PI) / 180;
   
-  // Calculate day of year
-  const start = new Date(date.getFullYear(), 0, 0);
-  const dayOfYear = Math.floor((date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  // Calculate day of year (1-365/366)
+  const start = new Date(date.getFullYear(), 0, 1);
+  const dayOfYear = Math.floor((date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   
-  // Solar declination angle
-  const declination = 23.45 * Math.sin((360 * (284 + dayOfYear) / 365) * Math.PI / 180) * Math.PI / 180;
+  // Solar declination angle (in radians)
+  const declination = 23.45 * Math.sin((360 * (284 + dayOfYear) / 365.25) * Math.PI / 180) * Math.PI / 180;
   
-  // Hour angle for sunrise/sunset
-  const hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(declination));
+  // Calculate hour angle for sunrise/sunset (in radians)
+  const tanLat = Math.tan(latRad);
+  const tanDecl = Math.tan(declination);
+  const cosHourAngle = -tanLat * tanDecl;
   
-  // Convert hour angle to time (in hours from noon)
-  const sunriseHour = 12 - (hourAngle * 180 / Math.PI) / 15;
-  const sunsetHour = 12 + (hourAngle * 180 / Math.PI) / 15;
+  // Check if sun rises/sets
+  if (cosHourAngle > 1 || cosHourAngle < -1) {
+    // Shouldn't happen in India, but handle edge cases
+    return { sunrise: { hour: 12, minute: 0 }, sunset: { hour: 12, minute: 0 } };
+  }
   
-  // Create sunrise and sunset dates
-  const sunrise = new Date(date);
-  sunrise.setHours(Math.floor(sunriseHour), Math.round((sunriseHour % 1) * 60), 0, 0);
+  const hourAngle = Math.acos(cosHourAngle);
   
-  const sunset = new Date(date);
-  sunset.setHours(Math.floor(sunsetHour), Math.round((sunsetHour % 1) * 60), 0, 0);
+  // Convert hour angle to solar time (in decimal hours from solar noon)
+  const hourAngleDegrees = hourAngle * 180 / Math.PI;
+  const sunriseSolarTime = 12 - (hourAngleDegrees / 15);
+  const sunsetSolarTime = 12 + (hourAngleDegrees / 15);
   
-  // Adjust for longitude (rough approximation: 4 minutes per degree)
-  const timeOffset = (lon / 15) * 60; // minutes
-  sunrise.setMinutes(sunrise.getMinutes() + timeOffset);
-  sunset.setMinutes(sunset.getMinutes() + timeOffset);
+  // Equation of time (correction in minutes)
+  const B = (360 / 365.25) * (dayOfYear - 81) * Math.PI / 180;
+  const equationOfTime = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
   
-  return { sunrise, sunset };
+  // Longitude correction (in minutes)
+  // IST standard meridian is 82.5°E
+  const STANDARD_MERIDIAN_IST = 82.5;
+  const longitudeCorrection = (lon - STANDARD_MERIDIAN_IST) * 4; // minutes
+  
+  // Convert solar time to IST
+  // Local Standard Time = Solar Time - Equation of Time - Longitude Correction
+  let sunriseIST = sunriseSolarTime - (equationOfTime / 60) - (longitudeCorrection / 60);
+  let sunsetIST = sunsetSolarTime - (equationOfTime / 60) - (longitudeCorrection / 60);
+  
+  // Normalize to 0-24 hours
+  while (sunriseIST < 0) sunriseIST += 24;
+  while (sunriseIST >= 24) sunriseIST -= 24;
+  while (sunsetIST < 0) sunsetIST += 24;
+  while (sunsetIST >= 24) sunsetIST -= 24;
+  
+  // Convert to hours and minutes
+  const sunriseHour = Math.floor(sunriseIST);
+  const sunriseMinute = Math.round((sunriseIST - sunriseHour) * 60);
+  
+  const sunsetHour = Math.floor(sunsetIST);
+  const sunsetMinute = Math.round((sunsetIST - sunsetHour) * 60);
+  
+  return {
+    sunrise: { hour: sunriseHour, minute: sunriseMinute },
+    sunset: { hour: sunsetHour, minute: sunsetMinute }
+  };
+}
+
+// Get current time in IST (Asia/Kolkata timezone) as { hour, minute }
+function getCurrentTimeIST(): { hour: number; minute: number } {
+  const now = new Date();
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    
+    const parts = formatter.formatToParts(now);
+    const hour = parseInt(parts.find(p => p.type === 'hour')!.value);
+    const minute = parseInt(parts.find(p => p.type === 'minute')!.value);
+    
+    return { hour, minute };
+  } catch (e) {
+    // Fallback: use browser's local time (assumes IST)
+    return { hour: now.getHours(), minute: now.getMinutes() };
+  }
 }
 
 // Check if current time is between sunrise and sunset
 function isDaytime(lat: number, lon: number, currentTime: Date = new Date()): boolean {
   try {
+    // Get current time in IST
+    const currentIST = getCurrentTimeIST();
+    const currentMinutes = currentIST.hour * 60 + currentIST.minute;
+    
+    // Calculate sunrise/sunset times in IST
     const { sunrise, sunset } = calculateSunriseSunset(lat, lon, currentTime);
-    // Use exact sunrise/sunset times - no buffer
-    // Panels turn ON at sunrise and turn OFF at sunset
-    return currentTime >= sunrise && currentTime <= sunset;
+    const sunriseMinutes = sunrise.hour * 60 + sunrise.minute;
+    const sunsetMinutes = sunset.hour * 60 + sunset.minute;
+    
+    // Compare times (all in IST)
+    if (sunsetMinutes < sunriseMinutes) {
+      // Sunset is next day (shouldn't happen in India)
+      return currentMinutes >= sunriseMinutes || currentMinutes <= sunsetMinutes;
+    }
+    
+    // Normal case: sunrise < sunset on same day
+    return currentMinutes >= sunriseMinutes && currentMinutes <= sunsetMinutes;
   } catch (error) {
-    // If calculation fails, fallback to approximate daytime (6 AM to 6 PM)
-    const hour = currentTime.getHours();
-    return hour >= 6 && hour < 18;
+    // If calculation fails, fallback to approximate daytime (6 AM to 6 PM IST)
+    const currentIST = getCurrentTimeIST();
+    return currentIST.hour >= 6 && currentIST.hour < 18;
   }
 }
 
@@ -199,10 +264,19 @@ export default function SolarPanelsVisualization({
     setAzimuthAngle(180);
   };
 
-  // Get sunrise and sunset times for display
+  // Get sunrise and sunset times for display (in IST)
   const { sunrise, sunset } = calculateSunriseSunset(latitude, longitude, new Date());
-  const sunriseTime = sunrise.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  const sunsetTime = sunset.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  
+  // Format times for display
+  const formatTime = (time: { hour: number; minute: number }): string => {
+    const hours12 = time.hour % 12 || 12;
+    const minutesStr = time.minute.toString().padStart(2, '0');
+    const ampm = time.hour >= 12 ? 'PM' : 'AM';
+    return `${hours12}:${minutesStr} ${ampm}`;
+  };
+  
+  const sunriseTime = formatTime(sunrise);
+  const sunsetTime = formatTime(sunset);
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
