@@ -256,19 +256,6 @@ function BatterySchedulerContent() {
               </div>
             )}
 
-            {/* Grid Export Section */}
-            <div className="mb-6">
-              <GridExportSection
-                microgridId={DEFAULT_MICROGRID_ID}
-                latitude={location.lat}
-                longitude={location.lon}
-                onProviderSelected={() => {
-                  // Refresh schedule when grid provider is selected
-                  handleRefresh();
-                }}
-              />
-            </div>
-
             {/* Schedule Component */}
             {scheduleData && (
               <ForecastSchedule
