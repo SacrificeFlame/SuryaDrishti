@@ -278,16 +278,24 @@ async def get_system_status(microgrid_id: str, db: Session = Depends(get_db)):
                 Device.is_active == True
             ).all()
             
-            total_load = sum(float(d.power_consumption_watts or 0) for d in devices) / 1000.0  # Convert to kW
-            critical_load = sum(float(d.power_consumption_watts or 0) for d in devices if d.device_type == 'essential') / 1000.0
-            non_critical_load = total_load - critical_load
-            logger.info(f"Load data: total={total_load}kW, critical={critical_load}kW, non-critical={non_critical_load}kW")
+            if devices and len(devices) > 0:
+                total_load = sum(float(d.power_consumption_watts or 0) for d in devices) / 1000.0  # Convert to kW
+                critical_load = sum(float(d.power_consumption_watts or 0) for d in devices if d.device_type == 'essential') / 1000.0
+                non_critical_load = total_load - critical_load
+                logger.info(f"REAL LOAD DATA: total={total_load}kW, critical={critical_load}kW, non-critical={non_critical_load}kW from {len(devices)} devices")
+            else:
+                # No devices found - use minimal defaults
+                logger.warning(f"No active devices found for {microgrid_id}")
+                total_load = 0.0
+                critical_load = 0.0
+                non_critical_load = 0.0
         except Exception as e:
             logger.error(f"Error querying devices: {e}", exc_info=True)
-            # Use defaults - continue without device data
-            total_load = 5.0  # Default 5kW load
-            critical_load = 3.0
-            non_critical_load = 2.0
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            # Use minimal defaults on error
+            total_load = 0.0
+            critical_load = 0.0
+            non_critical_load = 0.0
         
         # Get diesel generator status from SystemConfiguration
         diesel_status = 'off'
