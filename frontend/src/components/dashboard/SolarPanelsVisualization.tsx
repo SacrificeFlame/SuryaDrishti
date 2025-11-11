@@ -57,15 +57,13 @@ function calculateSunriseSunset(lat: number, lon: number, date: Date): { sunrise
 function isDaytime(lat: number, lon: number, currentTime: Date = new Date()): boolean {
   try {
     const { sunrise, sunset } = calculateSunriseSunset(lat, lon, currentTime);
-    // Add 30 minute buffer before/after sunrise/sunset for better detection
-    const buffer = 30 * 60 * 1000; // 30 minutes in milliseconds
-    const adjustedSunrise = new Date(sunrise.getTime() - buffer);
-    const adjustedSunset = new Date(sunset.getTime() + buffer);
-    return currentTime >= adjustedSunrise && currentTime <= adjustedSunset;
+    // Use exact sunrise/sunset times - no buffer
+    // Panels turn ON at sunrise and turn OFF at sunset
+    return currentTime >= sunrise && currentTime <= sunset;
   } catch (error) {
-    // If calculation fails, assume daytime during business hours (6 AM to 8 PM)
+    // If calculation fails, fallback to approximate daytime (6 AM to 6 PM)
     const hour = currentTime.getHours();
-    return hour >= 6 && hour < 20;
+    return hour >= 6 && hour < 18;
   }
 }
 
@@ -83,20 +81,20 @@ export default function SolarPanelsVisualization({
   const [isCurrentlyDaytime, setIsCurrentlyDaytime] = useState(true);
 
   // Check if it's currently daytime (update every minute)
-  // Also check if we have power data - if totalPower > 0, treat as daytime even if calculation says otherwise
+  // Use actual sunrise/sunset calculation - don't rely on power data for daytime detection
   useEffect(() => {
     const checkDaytime = () => {
       const calculatedDaytime = isDaytime(latitude, longitude);
-      // If we have power data (totalPower > 0), it's effectively daytime for display purposes
-      // This handles cases where timezone calculations might be off but we have actual power generation
-      setIsCurrentlyDaytime(calculatedDaytime || totalPower > 0);
+      // Use actual time of day calculation, not power data
+      // Power data should only indicate generation during daytime, not determine daytime
+      setIsCurrentlyDaytime(calculatedDaytime);
     };
     
     checkDaytime(); // Check immediately
     const interval = setInterval(checkDaytime, 60000); // Check every minute
     
     return () => clearInterval(interval);
-  }, [latitude, longitude, totalPower]);
+  }, [latitude, longitude]);
 
   // Calculate optimal angle based on time of day and sun position
   useEffect(() => {
@@ -135,37 +133,41 @@ export default function SolarPanelsVisualization({
     };
 
     // Generate panel data with angles
-    // If totalPower > 0, ALL panels should be active and generating power
-    const hasPower = totalPower > 0;
-    const shouldBeActive = hasPower || isCurrentlyDaytime; // Active if there's power OR it's daytime
-    
+    // Panels are ONLY active during daytime (between sunrise and sunset)
+    // Power data (totalPower) only affects how much power is generated, not whether panels are active
     const generatedPanels: SolarPanel[] = Array.from({ length: panelCount }, (_, i) => {
       const panelAngle = tiltAngle + (Math.random() - 0.5) * 5; // Slight variation
       const panelAzimuth = azimuthAngle + (Math.random() - 0.5) * 10; // Slight variation
       const powerMultiplier = calculatePowerMultiplier(panelAngle, panelAzimuth);
       
       // Calculate individual panel power
-      // If totalPower is provided and > 0, distribute it across panels
-      // Otherwise, calculate based on daytime and efficiency
+      // Panels only generate power during daytime (after sunrise, before sunset)
       let panelPower = 0;
-      if (hasPower) {
-        // Distribute totalPower across all panels with slight variations
-        panelPower = (totalPower / panelCount) * powerMultiplier * (0.85 + Math.random() * 0.3);
-      } else if (isCurrentlyDaytime) {
-        // During daytime with no power data, estimate based on capacity (50kW default)
-        const estimatedCapacity = 50; // kW
-        panelPower = (estimatedCapacity / panelCount) * powerMultiplier * 0.5 * (0.8 + Math.random() * 0.4);
+      if (isCurrentlyDaytime) {
+        // During daytime: use totalPower if available, otherwise estimate based on capacity
+        if (totalPower > 0) {
+          // Distribute totalPower across all panels with slight variations
+          panelPower = (totalPower / panelCount) * powerMultiplier * (0.85 + Math.random() * 0.3);
+        } else {
+          // During daytime with no power data, estimate based on capacity (50kW default)
+          const estimatedCapacity = 50; // kW
+          panelPower = (estimatedCapacity / panelCount) * powerMultiplier * 0.5 * (0.8 + Math.random() * 0.4);
+        }
+      } else {
+        // After sunset or before sunrise: panels are OFF, no power generation
+        panelPower = 0;
       }
       
       // Calculate efficiency based on power output
       const maxPanelPower = (totalPower || 50) / panelCount;
-      const efficiency = maxPanelPower > 0 ? (panelPower / maxPanelPower) * 0.20 : 0; // 20% max efficiency
+      const efficiency = maxPanelPower > 0 && isCurrentlyDaytime ? (panelPower / maxPanelPower) * 0.20 : 0; // 20% max efficiency
       
       return {
         id: i + 1,
         power: panelPower,
-        // ALL panels are active if totalPower > 0, or if it's daytime and we have some power
-        status: (hasPower || (isCurrentlyDaytime && panelPower > 0)) ? 'active' as const : 'inactive' as const,
+        // Panels are active ONLY during daytime (between sunrise and sunset)
+        // After sunset or before sunrise, all panels are inactive
+        status: (isCurrentlyDaytime && panelPower > 0) ? 'active' as const : 'inactive' as const,
         efficiency: efficiency,
         angle: panelAngle,
         azimuth: panelAzimuth,
@@ -217,12 +219,17 @@ export default function SolarPanelsVisualization({
         <div className="text-right">
           <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Total Output</div>
           <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {/* Use totalPower prop if available and > 0, otherwise use calculated totalGenerated */}
-            {(totalPower > 0 ? totalPower : totalGenerated).toFixed(1)} kW
+            {/* During daytime: show power, during nighttime: show 0 */}
+            {isCurrentlyDaytime ? (totalPower > 0 ? totalPower : totalGenerated).toFixed(1) : '0.0'} kW
           </div>
-          {!isCurrentlyDaytime && totalPower === 0 && (
+          {!isCurrentlyDaytime && (
             <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-              Nighttime (Sun: {sunriseTime} - {sunsetTime})
+              Nighttime - Panels Off (Sunrise: {sunriseTime}, Sunset: {sunsetTime})
+            </div>
+          )}
+          {isCurrentlyDaytime && (
+            <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+              Daytime - Generating (Sunset: {sunsetTime})
             </div>
           )}
         </div>
@@ -351,11 +358,13 @@ export default function SolarPanelsVisualization({
                 }`} 
               />
               <div className={`text-[8px] mt-1 font-semibold ${
-                panel.status === 'active'
+                panel.status === 'active' && isCurrentlyDaytime
                   ? 'text-amber-700 dark:text-amber-300' 
                   : 'text-slate-500 dark:text-slate-400'
               }`}>
-                {panel.status === 'active' && panel.power > 0 ? `${panel.power.toFixed(1)}kW` : 'OFF'}
+                {panel.status === 'active' && isCurrentlyDaytime && panel.power > 0 
+                  ? `${panel.power.toFixed(1)}kW` 
+                  : 'OFF'}
               </div>
             </div>
           </div>

@@ -34,7 +34,13 @@ export default function RegisterPage() {
     }
 
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError('Password must be at least 8 characters long');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password.length > 72) {
+      setError('Password cannot exceed 72 characters');
       setLoading(false);
       return;
     }
@@ -180,10 +186,14 @@ export default function RegisterPage() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) => {
+                  // Limit to 72 characters (bcrypt limit)
+                  const newPassword = e.target.value.slice(0, 72);
+                  setFormData({ ...formData, password: newPassword });
+                }}
                 className="input-field"
                 style={{ paddingLeft: '3rem', paddingRight: '2.5rem' }}
-                placeholder="8-72 characters"
+                placeholder="Enter your password"
                 minLength={8}
                 maxLength={72}
                 required
@@ -195,6 +205,20 @@ export default function RegisterPage() {
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
+            </div>
+            <div className="mt-1 flex items-center justify-between">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Minimum 8 characters, maximum 72 characters
+              </p>
+              <p className={`text-xs font-medium ${
+                formData.password.length < 8 
+                  ? 'text-red-600 dark:text-red-400' 
+                  : formData.password.length >= 72
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}>
+                {formData.password.length}/72
+              </p>
             </div>
           </div>
 
