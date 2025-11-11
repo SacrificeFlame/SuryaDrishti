@@ -5,6 +5,21 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone', // Enable standalone output for Docker
   
+  // Add cache headers to prevent stale content
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
+  
   // Explicitly configure webpack to resolve path aliases
   // Use process.cwd() for Railway/Nixpacks compatibility
   webpack: (config, { dir }) => {

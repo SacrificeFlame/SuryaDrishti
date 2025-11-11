@@ -11,15 +11,15 @@ export default function PurchasePage() {
   const { theme } = useTheme();
   const { startTrial, isAuthenticated } = useAuth();
   const router = useRouter();
-  const [selectedPlan, setSelectedPlan] = useState('professional');
+  const [selectedPlan, setSelectedPlan] = useState('standard');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [isStartingTrial, setIsStartingTrial] = useState(false);
 
   const plans = {
-    starter: {
-      name: 'Starter',
-      monthlyPrice: 9999,
-      yearlyPrice: 99990,
+    basic: {
+      name: 'Basic',
+      monthlyPrice: 3999,
+      yearlyPrice: 47988,
       features: [
         'Up to 3 microgrids',
         '60-minute forecasts',
@@ -29,10 +29,10 @@ export default function PurchasePage() {
         'Standard SLA',
       ],
     },
-    professional: {
-      name: 'Professional',
-      monthlyPrice: 24999,
-      yearlyPrice: 249990,
+    standard: {
+      name: 'Standard',
+      monthlyPrice: 7999,
+      yearlyPrice: 95988,
       features: [
         'Up to 10 microgrids',
         'Advanced forecasting',
@@ -43,10 +43,25 @@ export default function PurchasePage() {
         '99.9% SLA',
       ],
     },
+    premium: {
+      name: 'Premium',
+      monthlyPrice: 14999,
+      yearlyPrice: 179988,
+      features: [
+        'Up to 25 microgrids',
+        'Advanced ML forecasting',
+        'Real-time alerts & actions',
+        'Priority support',
+        'Custom integrations',
+        'Advanced analytics',
+        '99.9% SLA',
+        'Dedicated account manager',
+      ],
+    },
     enterprise: {
       name: 'Enterprise',
-      monthlyPrice: 0,
-      yearlyPrice: 0,
+      monthlyPrice: 49999,
+      yearlyPrice: 599988,
       features: [
         'Unlimited microgrids',
         'Custom ML models',
@@ -63,7 +78,10 @@ export default function PurchasePage() {
   const price = billingCycle === 'monthly' 
     ? selectedPlanData.monthlyPrice 
     : selectedPlanData.yearlyPrice;
-  const savings = billingCycle === 'yearly' ? Math.round(selectedPlanData.monthlyPrice * 12 * 0.17) : 0;
+  // Calculate savings: (monthly * 12) - yearly
+  const savings = billingCycle === 'yearly' 
+    ? Math.round((selectedPlanData.monthlyPrice * 12) - selectedPlanData.yearlyPrice) 
+    : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -132,7 +150,7 @@ export default function PurchasePage() {
           </div>
 
           {/* Plan Selection */}
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {Object.entries(plans).map(([key, plan]) => (
               <button
                 key={key}
