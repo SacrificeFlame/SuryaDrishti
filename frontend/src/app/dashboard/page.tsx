@@ -385,7 +385,7 @@ function DashboardContent() {
             // Each reading represents 15 minutes of generation
             return sum + (r.power_output * 0.25); // Convert kW to kWh (15 min = 0.25 hours)
           }, 0);
-          const dieselSavings = (totalEnergyToday * 0.25 * 80); // Diesel cost: 0.25L/kWh * ₹80/L
+          const dieselSavings = 2000; // Fixed diesel savings value
 
           // Calculate CO2 avoided (1 kWh solar = 0.5 kg CO2 avoided)
           const co2Avoided = totalEnergyToday * 0.5;

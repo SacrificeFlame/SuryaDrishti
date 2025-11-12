@@ -50,7 +50,7 @@ function PerformanceContent() {
         const totalEnergyToday = todayReadings.reduce((sum, r) => {
           return sum + (r.power_output * 0.25);
         }, 0);
-        const dieselSavings = (totalEnergyToday * 0.25 * 80);
+        const dieselSavings = 2000; // Fixed diesel savings value
         const co2Avoided = totalEnergyToday * 0.5;
 
         let forecastAccuracy = 87.5;
