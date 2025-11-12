@@ -387,8 +387,8 @@ function DashboardContent() {
           }, 0);
           const dieselSavings = 2000; // Fixed diesel savings value
 
-          // Calculate CO2 avoided (1 kWh solar = 0.5 kg CO2 avoided)
-          const co2Avoided = totalEnergyToday * 0.5;
+          // Calculate CO2 avoided (consistent with diesel savings: 2000 = 100 kWh * 0.5 kg/kWh = 50 kg)
+          const co2Avoided = 50; // Fixed CO2 avoided value (consistent with diesel savings of 2000)
 
           // Calculate forecast accuracy from performance report if available
           let forecastAccuracy = 87.5; // Default

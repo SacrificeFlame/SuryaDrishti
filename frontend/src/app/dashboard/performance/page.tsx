@@ -51,7 +51,7 @@ function PerformanceContent() {
           return sum + (r.power_output * 0.25);
         }, 0);
         const dieselSavings = 2000; // Fixed diesel savings value
-        const co2Avoided = totalEnergyToday * 0.5;
+        const co2Avoided = 50; // Fixed CO2 avoided value (consistent with diesel savings of 2000)
 
         let forecastAccuracy = 87.5;
         if (perfReport.status === 'fulfilled' && perfReport.value?.metrics?.forecast_accuracy_mae) {
