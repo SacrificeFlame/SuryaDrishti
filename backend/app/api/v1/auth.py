@@ -24,21 +24,89 @@ router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
+def truncate_password_to_72_bytes(password: str) -> str:
+    """
+    Truncate password to 72 bytes (bcrypt limit) while preserving UTF-8 characters.
+    If truncation occurs in the middle of a multi-byte character, remove that character.
+    """
+    if not password:
+        return password
+    
+    # Encode to bytes to check actual byte length
+    password_bytes = password.encode('utf-8')
+    
+    # If already <= 72 bytes, return as-is
+    if len(password_bytes) <= 72:
+        return password
+    
+    # Truncate to 72 bytes
+    truncated_bytes = password_bytes[:72]
+    
+    # Decode, handling incomplete UTF-8 sequences at the end
+    # If the last byte is part of a multi-byte character, remove it
+    # UTF-8 continuation bytes start with 10xxxxxx (0x80-0xBF)
+    while truncated_bytes:
+        # Check if last byte is a continuation byte (0x80-0xBF)
+        if truncated_bytes[-1] >= 0x80 and truncated_bytes[-1] < 0xC0:
+            # This is a continuation byte, remove it and try again
+            truncated_bytes = truncated_bytes[:-1]
+            continue
+        
+        # Try to decode
+        try:
+            truncated_password = truncated_bytes.decode('utf-8')
+            # Verify the decoded password is <= 72 bytes
+            if len(truncated_password.encode('utf-8')) <= 72:
+                return truncated_password
+            else:
+                # Shouldn't happen, but truncate again if it does
+                truncated_bytes = truncated_bytes[:-1]
+        except UnicodeDecodeError:
+            # Remove the last byte and try again
+            truncated_bytes = truncated_bytes[:-1]
+    
+    # Fallback: return empty string if all bytes are invalid
+    return ""
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash"""
     # Truncate to 72 bytes (bcrypt limit) before verification
-    # Encode to bytes, truncate, then decode back to string
-    password_bytes = plain_password.encode('utf-8')[:72]
-    truncated_password = password_bytes.decode('utf-8', errors='ignore')
-    return pwd_context.verify(truncated_password, hashed_password)
+    truncated_password = truncate_password_to_72_bytes(plain_password)
+    
+    # Double-check: ensure the truncated password is <= 72 bytes
+    password_bytes = truncated_password.encode('utf-8')
+    if len(password_bytes) > 72:
+        # This shouldn't happen, but if it does, truncate again
+        truncated_password = truncate_password_to_72_bytes(truncated_password)
+    
+    try:
+        return pwd_context.verify(truncated_password, hashed_password)
+    except ValueError as e:
+        # If bcrypt still complains, log and return False
+        logger.error(f"Bcrypt error verifying password: {e}, password length: {len(truncated_password.encode('utf-8'))} bytes")
+        return False
 
 def get_password_hash(password: str) -> str:
     """Hash a password - truncate to 72 bytes (bcrypt limit)"""
     # Bcrypt can only hash passwords up to 72 bytes
-    # Truncate to 72 bytes: encode to bytes, truncate, then decode back to string
-    password_bytes = password.encode('utf-8')[:72]
-    truncated_password = password_bytes.decode('utf-8', errors='ignore')
-    return pwd_context.hash(truncated_password)
+    truncated_password = truncate_password_to_72_bytes(password)
+    
+    # Double-check: ensure the truncated password is <= 72 bytes
+    password_bytes = truncated_password.encode('utf-8')
+    if len(password_bytes) > 72:
+        # This shouldn't happen, but if it does, truncate again
+        logger.warning(f"Password still exceeds 72 bytes after truncation: {len(password_bytes)} bytes")
+        truncated_password = truncate_password_to_72_bytes(truncated_password)
+    
+    try:
+        return pwd_context.hash(truncated_password)
+    except ValueError as e:
+        # If bcrypt still complains, log and raise a more helpful error
+        logger.error(f"Bcrypt error hashing password: {e}, password length: {len(truncated_password.encode('utf-8'))} bytes")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Password processing error: {str(e)}"
+        )
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     """Create a JWT access token"""
