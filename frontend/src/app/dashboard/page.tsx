@@ -165,7 +165,7 @@ function transformMicrogridForecastToLegacy(
     alerts: [],
     current_irradiance: currentIrradiance,
     current_power_output: currentPower,
-    cloud_data: microgridForecast.cloud_data || {
+    cloud_data: {
       cloud_map: Array(20).fill(null).map(() => Array(20).fill(0)),
       motion_vectors: Array(20).fill(null).map(() => 
         Array(20).fill(null).map(() => ({ x: 0, y: 0 }))
