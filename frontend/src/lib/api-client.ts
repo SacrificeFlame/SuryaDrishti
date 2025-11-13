@@ -577,6 +577,27 @@ export async function getPerformanceReport(
   return response.json();
 }
 
+export interface RealMetricsResponse {
+  microgrid_id: string;
+  period: string;
+  diesel_savings_rupees: number;
+  co2_avoided_kg: number;
+  total_energy_kwh: number;
+  data_points: number;
+}
+
+export async function getRealMetrics(
+  microgridId: string,
+  period: 'today' | 'week' | 'month' = 'today'
+): Promise<RealMetricsResponse> {
+  const apiUrl = getApiUrlRuntime();
+  const response = await fetch(`${apiUrl}/reports/metrics/${microgridId}?period=${period}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch real metrics: ${response.status}`);
+  }
+  return response.json();
+}
+
 // Grid Provider Types
 export interface GridProvider {
   id: string;

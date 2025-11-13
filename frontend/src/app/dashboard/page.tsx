@@ -22,6 +22,8 @@ import {
   getLatestSensorReading,
   getSensorHistory,
   getMicrogridInfo,
+  getRealMetrics,
+  getPerformanceReport,
   API_BASE_URL_NO_SUFFIX,
 } from '@/lib/api-client';
 import { useMicrogridForecast } from '@/hooks/useForecast';
@@ -163,15 +165,10 @@ function transformMicrogridForecastToLegacy(
     alerts: [],
     current_irradiance: currentIrradiance,
     current_power_output: currentPower,
-    cloud_data: {
-      cloud_map: Array(20).fill(null).map(() => 
-        Array(20).fill(null).map(() => Math.random() > 0.7 ? Math.random() : 0)
-      ),
+    cloud_data: microgridForecast.cloud_data || {
+      cloud_map: Array(20).fill(null).map(() => Array(20).fill(0)),
       motion_vectors: Array(20).fill(null).map(() => 
-        Array(20).fill(null).map(() => ({
-          x: (Math.random() - 0.5) * 2,
-          y: (Math.random() - 0.5) * 2
-        }))
+        Array(20).fill(null).map(() => ({ x: 0, y: 0 }))
       ),
     },
   };
@@ -370,44 +367,57 @@ function DashboardContent() {
           );
         }
 
-        // Calculate performance metrics from sensor history
-        if (sensorHistory.status === 'fulfilled' && sensorHistory.value.length > 0) {
-          const history = sensorHistory.value;
-          const todayReadings = history.filter((r) => {
-            const readingDate = new Date(r.timestamp);
-            const today = new Date();
-            return readingDate.toDateString() === today.toDateString();
-          });
+        // Calculate performance metrics from REAL data
+        try {
+          // Fetch real metrics from backend (diesel savings, CO2 avoided)
+          const [realMetricsResult, perfReportResult] = await Promise.allSettled([
+            getRealMetrics(DEFAULT_MICROGRID_ID, 'today'),
+            getPerformanceReport(DEFAULT_MICROGRID_ID, 7),
+          ]);
 
-          // Calculate diesel savings (assuming diesel costs ₹80/liter, 1kW = 0.25L/hour)
-          // Sum power output over time intervals (assuming 15-minute intervals)
-          const totalEnergyToday = todayReadings.reduce((sum, r) => {
-            // Each reading represents 15 minutes of generation
-            return sum + (r.power_output * 0.25); // Convert kW to kWh (15 min = 0.25 hours)
-          }, 0);
-          const dieselSavings = 2000; // Fixed diesel savings value
-
-          // Calculate CO2 avoided (consistent with diesel savings: 2000 = 100 kWh * 0.5 kg/kWh = 50 kg)
-          const co2Avoided = 50; // Fixed CO2 avoided value (consistent with diesel savings of 2000)
-
-          // Calculate forecast accuracy from performance report if available
-          let forecastAccuracy = 87.5; // Default
-          try {
-            const { getPerformanceReport } = await import('@/lib/api-client');
-            const perfReport = await getPerformanceReport(DEFAULT_MICROGRID_ID, 7);
-            if (perfReport?.metrics?.forecast_accuracy_mae) {
-              // Convert MAE to accuracy percentage (lower MAE = higher accuracy)
-              // Assuming MAE of 15 = 85% accuracy, scale accordingly
-              forecastAccuracy = Math.max(70, Math.min(100, 100 - (perfReport.metrics.forecast_accuracy_mae * 0.5)));
+          // Get real diesel savings and CO2 avoided
+          let dieselSavings = 0;
+          let co2Avoided = 0;
+          
+          if (realMetricsResult.status === 'fulfilled') {
+            dieselSavings = realMetricsResult.value.diesel_savings_rupees;
+            co2Avoided = realMetricsResult.value.co2_avoided_kg;
+            console.log('REAL METRICS:', {
+              dieselSavings,
+              co2Avoided,
+              totalEnergy: realMetricsResult.value.total_energy_kwh,
+              dataPoints: realMetricsResult.value.data_points,
+            });
+          } else {
+            console.warn('Could not fetch real metrics, using fallback:', realMetricsResult.reason);
+            // Fallback: calculate from sensor history if available
+            if (sensorHistory.status === 'fulfilled' && sensorHistory.value.length > 0) {
+              const todayReadings = sensorHistory.value.filter((r) => {
+                const readingDate = new Date(r.timestamp);
+                const today = new Date();
+                return readingDate.toDateString() === today.toDateString();
+              });
+              const totalEnergyToday = todayReadings.reduce((sum, r) => {
+                return sum + (r.power_output * 0.25); // 15 min intervals
+              }, 0);
+              dieselSavings = totalEnergyToday * 0.25 * 80; // 0.25 L/kWh * ₹80/L
+              co2Avoided = totalEnergyToday * 0.5; // 0.5 kg CO2 per kWh
             }
-          } catch (err) {
-            // Use default if report fetch fails
-            console.warn('Could not fetch performance report for accuracy:', err);
+          }
+
+          // Calculate forecast accuracy from performance report
+          let forecastAccuracy = 87.5; // Default
+          if (perfReportResult.status === 'fulfilled' && perfReportResult.value?.metrics?.forecast_accuracy_mae) {
+            // Convert MAE to accuracy percentage (lower MAE = higher accuracy)
+            // Assuming MAE of 15 = 85% accuracy, scale accordingly
+            forecastAccuracy = Math.max(70, Math.min(100, 100 - (perfReportResult.value.metrics.forecast_accuracy_mae * 0.5)));
           }
 
           // Calculate uptime from system status
           const uptime = statusResponse.status === 'fulfilled' && statusResponse.value.uptime_hours
             ? Math.min(100, (statusResponse.value.uptime_hours / (30 * 24)) * 100) // Uptime as % of 30 days
+            : (perfReportResult.status === 'fulfilled' && perfReportResult.value?.metrics?.system_uptime_percent)
+            ? perfReportResult.value.metrics.system_uptime_percent
             : 99.2; // Default
 
           setPerformanceMetrics({
@@ -415,6 +425,15 @@ function DashboardContent() {
             forecastAccuracy,
             uptime,
             co2Avoided,
+          });
+        } catch (err) {
+          console.error('Error calculating performance metrics:', err);
+          // Set defaults on error
+          setPerformanceMetrics({
+            dieselSavings: 0,
+            forecastAccuracy: 87.5,
+            uptime: 99.2,
+            co2Avoided: 0,
           });
         }
 
